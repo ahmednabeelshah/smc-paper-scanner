@@ -183,7 +183,5 @@ def run_once():
 if __name__ == "__main__":
     import os
     run_once()
-    if os.getenv("GITHUB_EVENT_NAME") == "workflow_dispatch":
-        send_tg("Cloud Scanner v5.1 Confirmed Active! Monitoring 30 pairs + 5 active trades every 20 mins.")
 
     
