@@ -21,4 +21,3 @@ jobs:
           git add active_trades.json
           git commit -m "update state" || exit 0
           git push
-          
