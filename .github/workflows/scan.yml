@@ -1,10 +1,11 @@
 name: SMC Paper Scanner
 on:
-  schedule:
-    - cron: '*/20 * * * *'
   workflow_dispatch:
 permissions:
   contents: write
+concurrency:
+  group: scanner-lock
+  cancel-in-progress: false
 jobs:
   scan:
     runs-on: ubuntu-latest
@@ -14,10 +15,14 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install requests
-      - run: python scanner.py
+      - env:
+          TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+        run: python scanner.py
       - run: |
           git config user.name "scanner-bot"
-          git config user.email "bot@://github.com"
+          git config user.email "scanner@noreply.local"
           git add active_trades.json
           git commit -m "update state" || exit 0
           git push
+          
