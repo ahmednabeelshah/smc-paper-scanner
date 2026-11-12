@@ -1,9 +1,9 @@
-import json, time, requests
+import json, os, time, requests
 from datetime import datetime, timezone
 from pathlib import Path
 
-TOKEN = "9218350197:AAHad9f12msIV8kor8YV6NbwWTLBDFMTe80"
-CHAT_ID = "5300804129"
+TOKEN = os.environ["TG_TOKEN"]
+CHAT_ID = os.environ["TG_CHAT_ID"]
 BASE = "https://okx.com"
 TG_URL = "https://api." + "telegram.org/bot" + TOKEN + "/sendMessage"
 STATE_FILE = Path("active_trades.json")
