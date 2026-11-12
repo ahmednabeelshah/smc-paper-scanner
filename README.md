@@ -1,0 +1,1 @@
+# smc-paper-scanner
