@@ -4,7 +4,7 @@ from pathlib import Path
 
 TOKEN = "9218350197:AAHad9f12msIV8kor8YV6NbwWTLBDFMTe80"
 CHAT_ID = "5300804129"
-BASE = "https://fapi." + "binance.com"
+BASE = "https://okx.com"
 TG_URL = "https://api." + "telegram.org/bot" + TOKEN + "/sendMessage"
 STATE_FILE = Path("active_trades.json")
 
@@ -30,9 +30,15 @@ def ema_last(vals, p):
     for x in it: v = a * x + (1.0 - a) * v
     return v
 
-def closed_klines(sym, iv, limit, srv_ms):
-    raw = get_json("/fapi/v1/klines", {"symbol": sym, "interval": iv, "limit": limit})
-    return [r for r in raw if int(r) < srv_ms]
+def to_inst(sym):
+    base = sym.replace("1000", "").replace("USDT", "")
+    return f"{base}-USDT-SWAP"
+
+def closed_klines(sym, bar_iv, limit):
+    raw = get_json("/api/v5/market/candles", {"instId": to_inst(sym), "bar": bar_iv, "limit": limit}).get("data", [])
+    closed = [r for r in raw if r[8] == "1"]
+    closed.reverse()
+    return closed
 
 def load_state():
     if STATE_FILE.exists():
@@ -48,12 +54,13 @@ def track_trades(st, srv_ms):
     for tr in st["trades"]:
         if tr["status"] not in ("PENDING", "ACTIVE"): continue
         sym, side = tr["symbol"], tr["side"]
-        kl = get_json("/fapi/v1/klines", {"symbol": sym, "interval": "5m", "startTime": tr["last_chk"], "limit": 400})
-        if not isinstance(kl, list) or not kl: continue
+        kl = get_json("/api/v5/market/candles", {"instId": to_inst(sym), "bar": "5m", "limit": 100}).get("data", [])
+        if not kl: continue
+        kl.reverse()
         for bar in kl:
-            b_open, b_hi, b_lo, b_cl, b_close_t = float(bar), float(bar), float(bar), float(bar), int(bar)
-            if b_close_t > srv_ms: break
-            tr["last_chk"] = b_close_t + 1
+            b_open, b_hi, b_lo, b_cl, b_close_t = float(bar[1]), float(bar[2]), float(bar[3]), float(bar[4]), int(bar[0]) + 300000
+            if bar[8] != "1" or b_close_t <= tr["last_chk"]: continue
+            tr["last_chk"] = b_close_t
             if tr["status"] == "PENDING":
                 if (side == "LONG" and b_lo <= tr["stop"]) or (side == "SHORT" and b_hi >= tr["stop"]):
                     tr["status"] = "EXPIRED_SL"
@@ -117,38 +124,37 @@ def track_trades(st, srv_ms):
 
 def run_once():
     st = load_state()
-    srv_ms = int(get_json("/fapi/v1/time")["serverTime"])
+    srv_ms = int(get_json("/api/v5/public/time")["data"][0]["ts"])
     track_trades(st, srv_ms)
     now_str = datetime.fromtimestamp(srv_ms / 1000, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    btc4 = closed_klines("BTCUSDT", "4h", 70, srv_ms)
-    btc1 = closed_klines("BTCUSDT", "1h", 20, srv_ms)
-    c4_b = [float(x) for x in btc4]
+    btc4 = closed_klines("BTCUSDT", "4H", 70)
+    btc1 = closed_klines("BTCUSDT", "1H", 20)
+    c4_b = [float(x[4]) for x in btc4]
     e50_b = ema_last(c4_b, 50)
     b_bull, b_bear = c4_b[-1] > e50_b, c4_b[-1] < e50_b
-    b_ret5 = (float(btc1[-1]) / float(btc1[-6])) - 1.0
+    b_ret5 = (float(btc1[-1][4]) / float(btc1[-6][4])) - 1.0
 
-    info = get_json("/fapi/v1/exchangeInfo")
-    tickers = get_json("/fapi/v1/ticker/24hr")
-    books = {b["symbol"]: b for b in get_json("/fapi/v1/ticker/bookTicker")}
-    active = {s["symbol"] for s in info["symbols"] if s["status"]=="TRADING" and s["contractType"]=="PERPETUAL" and s["quoteAsset"]=="USDT"}
-    top30 = sorted([t for t in tickers if t["symbol"] in active and float(t["quoteVolume"]) >= 15_000_000], key=lambda x: float(x["quoteVolume"]), reverse=True)[:30]
-    print(f"[{now_str}] GitHub Cloud Scan 30 pairs | BTC 4h={'BULL' if b_bull else 'BEAR'} | Active/Pending={sum(1 for x in st['trades'] if x['status'] in ('PENDING','ACTIVE'))}")
+    tickers = get_json("/api/v5/market/tickers", {"instType": "SWAP"}).get("data", [])
+    usdt_swaps = [t for t in tickers if t["instId"].endswith("-USDT-SWAP") and float(t.get("volCcy24h", 0)) * float(t.get("last", 0)) >= 15_000_000]
+    top30 = sorted(usdt_swaps, key=lambda x: float(x.get("volCcy24h", 0)) * float(x.get("last", 0)), reverse=True)[:30]
+    print(f"[{now_str}] GitHub Cloud Scan {len(top30)} pairs | BTC 4h={'BULL' if b_bull else 'BEAR'} | Active/Pending={sum(1 for x in st['trades'] if x['status'] in ('PENDING','ACTIVE'))}")
 
     for t in top30:
-        sym = t["symbol"]
-        if sym == "BTCUSDT": continue
+        inst = t["instId"]
+        if inst == "BTC-USDT-SWAP": continue
+        sym = inst.replace("-USDT-SWAP", "USDT")
         try:
-            bk = books.get(sym, {})
-            bid, ask = float(bk.get("bidPrice", 0)), float(bk.get("askPrice", 0))
+            bid, ask = float(t.get("bidPx", 0)), float(t.get("askPx", 0))
             if bid <= 0 or ((ask - bid) / bid * 100.0) >= 0.08: continue
-            fund = float(get_json("/fapi/v1/premiumIndex", {"symbol": sym}).get("lastFundingRate", 0))
+            f_data = get_json("/api/v5/public/funding-rate", {"instId": inst}).get("data", [])
+            fund = float(f_data[0]["fundingRate"]) if f_data else 0.0
             if abs(fund) >= 0.0005: continue
-            k4 = closed_klines(sym, "4h", 70, srv_ms)
-            k1 = closed_klines(sym, "1h", 35, srv_ms)
+            k4 = closed_klines(sym, "4H", 70)
+            k1 = closed_klines(sym, "1H", 35)
             if len(k4) < 55 or len(k1) < 25: continue
-            c4 = [float(x) for x in k4]
+            c4 = [float(x[4]) for x in k4]
             e50 = ema_last(c4, 50)
-            op, hi, lo, cl, vol = [float(x) for x in k1], [float(x) for x in k1], [float(x) for x in k1], [float(x) for x in k1], [float(x) for x in k1]
+            op, hi, lo, cl, vol = [float(x[1]) for x in k1], [float(x[2]) for x in k1], [float(x[3]) for x in k1], [float(x[4]) for x in k1], [float(x[7]) for x in k1]
             avg_v = sum(vol[-22:-2]) / 20.0
             if avg_v == 0 or (vol[-2] / avg_v) < 1.5: continue
             v_mult = vol[-2] / avg_v
@@ -165,15 +171,15 @@ def run_once():
                     side, entry, sl = "LONG", lo[-1], lo[-3] * 0.998
                     f_conf, risk, tp1, tp2, be = entry * 0.9995, entry - sl, entry + (entry - sl)*1.5, entry + (entry - sl)*3.0, entry * 1.0015
             if side is None or risk <= 0 or (risk / entry) > 0.04: continue
-            c_ms = int(k1[-1])
+            c_ms = int(k1[-1][0]) + 3600000
             uid = f"{sym}_{side}_{c_ms}"
             if uid in st["seen"]: continue
             st["seen"].append(uid)
-            st["trades"].append({"symbol": sym, "side": side, "entry": entry, "confirm": f_conf, "stop": sl, "tp1": tp1, "tp2": tp2, "be": be, "status": "PENDING", "last_chk": c_ms + 1, "exp_ms": c_ms + 7200000, "fill_ms": 0, "hit_tp1": False, "locked_pct": 0.0})
+            st["trades"].append({"symbol": sym, "side": side, "entry": entry, "confirm": f_conf, "stop": sl, "tp1": tp1, "tp2": tp2, "be": be, "status": "PENDING", "last_chk": c_ms, "exp_ms": c_ms + 7200000, "fill_ms": 0, "hit_tp1": False, "locked_pct": 0.0})
             send_tg(f"NEW SIGNAL [{side}]: {sym}\nEntry: {entry:.6g} | SL: {sl:.6g}\nTP1: {tp1:.6g} | TP2: {tp2:.6g}\nFVG: {gap:.2f}% | Vol: {v_mult:.2f}x")
         except Exception as e: print(f"Skip {sym}: {e}")
     save_state(st)
 
 if __name__ == "__main__":
     run_once()
-              
+    
