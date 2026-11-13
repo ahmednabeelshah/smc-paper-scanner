@@ -14,7 +14,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install requests
+      - run: pip install requests pandas numpy
       - env:
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
@@ -22,11 +22,13 @@ jobs:
           python scanner.py
           python scanner_v54.py
           python scanner_tsmom.py
+          python scanner_residual.py
           python oi_logger.py
       - run: |
           git config user.name "scanner-bot"
           git config user.email "scanner@noreply.local"
-          git add active_trades.json active_trades_v54.json active_trades_tsmom.json oi_funding_log.csv
+          git add active_trades.json active_trades_v54.json active_trades_tsmom.json active_trades_residual.json oi_funding_log.csv
           git commit -m "update state" || exit 0
           git pull --rebase
           git push
+          
