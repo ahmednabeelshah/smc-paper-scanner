@@ -133,7 +133,6 @@ def run_once():
 
     if not (8 <= dt_utc.hour <= 18):
         print(f"[{now_str}] [v5.4] Outside London+NY window (08-18 UTC). Tracking exits only.")
-        send_tg(f"[v5.4] LIVE HEARTBEAT OK: GitHub -> Telegram verified at {now_str}")
         save_state(st)
         return
 
