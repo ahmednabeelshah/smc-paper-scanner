@@ -20,7 +20,7 @@ def get_json(path, params=None):
             time.sleep(2 ** a)
 
 def send_tg(msg):
-    msg = f"🎯 [v5.4 SNIPER]\n{msg}"
+    msg = f"[v5.4 SNIPER]\n{msg}"
     print("\n" + "=" * 50 + "\n" + msg + "\n" + "=" * 50)
     try:
         requests.post(TG_URL, json={"chat_id": CHAT_ID, "text": msg}, timeout=15)
