@@ -48,8 +48,10 @@ def closed_daily(inst_id, limit=80):
 def ema_list(vals, p):
     a = 2.0 / (p + 1.0)
     out = []
-    v = vals
-    for x in vals:
+    it = iter(vals)
+    v = next(it)
+    out.append(v)
+    for x in it:
         v = a * x + (1.0 - a) * v
         out.append(v)
     return out
