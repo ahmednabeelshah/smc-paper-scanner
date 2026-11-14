@@ -3,7 +3,8 @@
     "UNIUSDT_SHORT_1794664800000",
     "BNBUSDT_SHORT_1794668400000",
     "ETHUSDT_SHORT_1794672000000",
-    "PEPEUSDT_SHORT_1794672000000"
+    "PEPEUSDT_SHORT_1794672000000",
+    "XRPUSDT_SHORT_1794675600000"
   ],
   "trades": [
     {
@@ -37,8 +38,8 @@
       "trig_22": 582.719,
       "lock_10": 596.225,
       "trailed_22": false,
-      "status": "PENDING",
-      "last_chk": 1794675300000,
+      "status": "EXPIRED_2H",
+      "last_chk": 1794675600000,
       "exp_ms": 1794675600000,
       "fill_ms": 0,
       "hit_tp1": false,
@@ -57,7 +58,7 @@
       "lock_10": 1812.6111,
       "trailed_22": false,
       "status": "PENDING",
-      "last_chk": 1794675300000,
+      "last_chk": 1794675600000,
       "exp_ms": 1794679200000,
       "fill_ms": 0,
       "hit_tp1": false,
@@ -76,8 +77,27 @@
       "lock_10": 4.004690199999999e-06,
       "trailed_22": false,
       "status": "PENDING",
-      "last_chk": 1794675300000,
+      "last_chk": 1794675600000,
       "exp_ms": 1794679200000,
+      "fill_ms": 0,
+      "hit_tp1": false,
+      "locked_pct": 0.0
+    },
+    {
+      "symbol": "XRPUSDT",
+      "side": "SHORT",
+      "entry": 0.9727,
+      "confirm": 0.97318635,
+      "stop": 0.9978918,
+      "tp1": 0.9349123,
+      "tp2": 0.8971246,
+      "be": 0.9712409500000001,
+      "trig_22": 0.91727804,
+      "lock_10": 0.9475082,
+      "trailed_22": false,
+      "status": "PENDING",
+      "last_chk": 1794675600000,
+      "exp_ms": 1794682800000,
       "fill_ms": 0,
       "hit_tp1": false,
       "locked_pct": 0.0
