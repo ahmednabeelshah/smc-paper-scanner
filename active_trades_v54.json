@@ -1,4 +1,26 @@
 {
-  "seen": [],
-  "trades": []
+  "seen": [
+    "UNIUSDT_SHORT_1794664800000"
+  ],
+  "trades": [
+    {
+      "symbol": "UNIUSDT",
+      "side": "SHORT",
+      "entry": 5.426,
+      "confirm": 5.428713,
+      "stop": 5.530038,
+      "tp1": 5.269943,
+      "tp2": 5.113886,
+      "be": 5.417861,
+      "trig_22": 5.1971164,
+      "lock_10": 5.321962,
+      "trailed_22": false,
+      "status": "PENDING",
+      "last_chk": 1794664800000,
+      "exp_ms": 1794672000000,
+      "fill_ms": 0,
+      "hit_tp1": false,
+      "locked_pct": 0.0
+    }
+  ]
 }
