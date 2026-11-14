@@ -29,7 +29,7 @@ def send_tg(msg: str):
     try:
         requests.post(
             f"https://telegram.org{TG_TOKEN}/sendMessage",
-            json={"chat_id": TG_CHAT_ID, "text": msg, "parse_mode": "Markdown"},
+            json={"chat_id": TG_CHAT_ID, "text": msg},
             timeout=10
         )
     except Exception as e:
