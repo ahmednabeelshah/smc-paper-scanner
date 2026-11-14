@@ -1,0 +1,16 @@
+{
+  "last_ts": 1794528000000,
+  "trades": [
+    {
+      "inst": "INJ-USDT-SWAP",
+      "sym": "INJUSDT",
+      "side": "SHORT",
+      "side_num": -1,
+      "entry": 8.071,
+      "b_entry": 68286.7,
+      "beta": 1.601,
+      "stop_pct": 0.1212,
+      "days": 0
+    }
+  ]
+}
