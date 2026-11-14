@@ -25,11 +25,12 @@ jobs:
           python scanner_residual.py
           python scanner_csmom.py
           python scanner_macd.py
+          python scanner_hvol_res.py
           python oi_logger.py
       - run: |
           git config user.name "scanner-bot"
           git config user.email "scanner@noreply.local"
-          git add active_trades.json active_trades_v54.json active_trades_tsmom.json active_trades_residual.json active_trades_csmom.json active_trades_macd.json oi_funding_log.csv
+          git add active_trades.json active_trades_v54.json active_trades_tsmom.json active_trades_residual.json active_trades_csmom.json active_trades_macd.json active_trades_hvol_res.json oi_funding_log.csv
           git commit -m "update state" || exit 0
           git pull --rebase
           git push
