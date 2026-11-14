@@ -1,7 +1,9 @@
 {
   "seen": [
     "UNIUSDT_SHORT_1794664800000",
-    "BNBUSDT_SHORT_1794668400000"
+    "BNBUSDT_SHORT_1794668400000",
+    "ETHUSDT_SHORT_1794672000000",
+    "PEPEUSDT_SHORT_1794672000000"
   ],
   "trades": [
     {
@@ -16,8 +18,8 @@
       "trig_22": 5.1971164,
       "lock_10": 5.321962,
       "trailed_22": false,
-      "status": "PENDING",
-      "last_chk": 1794671700000,
+      "status": "EXPIRED_2H",
+      "last_chk": 1794672000000,
       "exp_ms": 1794672000000,
       "fill_ms": 0,
       "hit_tp1": false,
@@ -36,8 +38,46 @@
       "lock_10": 596.225,
       "trailed_22": false,
       "status": "PENDING",
-      "last_chk": 1794671700000,
+      "last_chk": 1794672000000,
       "exp_ms": 1794675600000,
+      "fill_ms": 0,
+      "hit_tp1": false,
+      "locked_pct": 0.0
+    },
+    {
+      "symbol": "ETHUSDT",
+      "side": "SHORT",
+      "entry": 1857.93,
+      "confirm": 1858.858965,
+      "stop": 1903.2489,
+      "tp1": 1789.95165,
+      "tp2": 1721.9733,
+      "be": 1855.143105,
+      "trig_22": 1758.2284200000001,
+      "lock_10": 1812.6111,
+      "trailed_22": false,
+      "status": "PENDING",
+      "last_chk": 1794672000000,
+      "exp_ms": 1794679200000,
+      "fill_ms": 0,
+      "hit_tp1": false,
+      "locked_pct": 0.0
+    },
+    {
+      "symbol": "PEPEUSDT",
+      "side": "SHORT",
+      "entry": 4.1591e-06,
+      "confirm": 4.16117955e-06,
+      "stop": 4.3135098e-06,
+      "tp1": 3.927485299999999e-06,
+      "tp2": 3.695870599999998e-06,
+      "be": 4.15286135e-06,
+      "trig_22": 3.819398439999999e-06,
+      "lock_10": 4.004690199999999e-06,
+      "trailed_22": false,
+      "status": "PENDING",
+      "last_chk": 1794672000000,
+      "exp_ms": 1794679200000,
       "fill_ms": 0,
       "hit_tp1": false,
       "locked_pct": 0.0
