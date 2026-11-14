@@ -1,6 +1,7 @@
 {
   "seen": [
-    "UNIUSDT_SHORT_1794664800000"
+    "UNIUSDT_SHORT_1794664800000",
+    "BNBUSDT_SHORT_1794668400000"
   ],
   "trades": [
     {
@@ -16,8 +17,27 @@
       "lock_10": 5.321962,
       "trailed_22": false,
       "status": "PENDING",
-      "last_chk": 1794668100000,
+      "last_chk": 1794668400000,
       "exp_ms": 1794672000000,
+      "fill_ms": 0,
+      "hit_tp1": false,
+      "locked_pct": 0.0
+    },
+    {
+      "symbol": "BNBUSDT",
+      "side": "SHORT",
+      "entry": 607.48,
+      "confirm": 607.78374,
+      "stop": 618.735,
+      "tp1": 590.5975000000001,
+      "tp2": 573.715,
+      "be": 606.5687800000001,
+      "trig_22": 582.719,
+      "lock_10": 596.225,
+      "trailed_22": false,
+      "status": "PENDING",
+      "last_chk": 1794668400000,
+      "exp_ms": 1794675600000,
       "fill_ms": 0,
       "hit_tp1": false,
       "locked_pct": 0.0
