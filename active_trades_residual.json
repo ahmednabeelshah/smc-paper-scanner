@@ -1,5 +1,45 @@
 {
-  "last_processed_ts": 1794441600000,
-  "active": [],
+  "last_processed_ts": 1794528000000,
+  "active": [
+    {
+      "inst": "XRP-USDT-SWAP",
+      "sym": "XRPUSDT",
+      "side": -1,
+      "entry_date": "2026-11-13",
+      "alt_entry": 1.0105,
+      "btc_entry": 68286.7,
+      "beta": 1.358,
+      "entry_z": 3.02,
+      "stop_dist": 0.04122,
+      "cum_pnl": 0.0,
+      "days": 0
+    },
+    {
+      "inst": "DOGE-USDT-SWAP",
+      "sym": "DOGEUSDT",
+      "side": -1,
+      "entry_date": "2026-11-13",
+      "alt_entry": 0.06449,
+      "btc_entry": 68286.7,
+      "beta": 1.451,
+      "entry_z": 2.82,
+      "stop_dist": 0.04431,
+      "cum_pnl": 0.0,
+      "days": 0
+    },
+    {
+      "inst": "ADA-USDT-SWAP",
+      "sym": "ADAUSDT",
+      "side": -1,
+      "entry_date": "2026-11-13",
+      "alt_entry": 0.1684,
+      "btc_entry": 68286.7,
+      "beta": 1.503,
+      "entry_z": 2.52,
+      "stop_dist": 0.05774,
+      "cum_pnl": 0.0,
+      "days": 0
+    }
+  ],
   "closed": []
 }
