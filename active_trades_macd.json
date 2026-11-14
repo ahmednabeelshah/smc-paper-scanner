@@ -1,0 +1,14 @@
+{
+  "last_ts": 1794528000000,
+  "trades": [
+    {
+      "inst": "AVAX-USDT-SWAP",
+      "sym": "AVAXUSDT",
+      "side": "SHORT",
+      "entry": 8.23,
+      "stop": 9.613035714285715,
+      "risk": 1.3830357142857146,
+      "best": 8.23
+    }
+  ]
+}
