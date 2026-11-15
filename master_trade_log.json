@@ -1,5 +1,5 @@
 {
-  "updated_utc": "2026-11-15 18:27 UTC",
+  "updated_utc": "2026-11-15 18:33 UTC",
   "total_active": 3,
   "total_closed": 0,
   "models": {
@@ -76,7 +76,7 @@
   },
   "trades": [
     {
-      "Updated_UTC": "2026-11-15 18:27 UTC",
+      "Updated_UTC": "2026-11-15 18:33 UTC",
       "Model": "RESIDUAL (AUTO)",
       "Status": "ACTIVE",
       "Symbol": "XRP-USDT-SWAP",
@@ -90,7 +90,7 @@
       "Traits": "beta=1.358; entry_z=3.02; stop_dist=0.041"
     },
     {
-      "Updated_UTC": "2026-11-15 18:27 UTC",
+      "Updated_UTC": "2026-11-15 18:33 UTC",
       "Model": "RESIDUAL (AUTO)",
       "Status": "ACTIVE",
       "Symbol": "DOGE-USDT-SWAP",
@@ -104,7 +104,7 @@
       "Traits": "beta=1.451; entry_z=2.82; stop_dist=0.044"
     },
     {
-      "Updated_UTC": "2026-11-15 18:27 UTC",
+      "Updated_UTC": "2026-11-15 18:33 UTC",
       "Model": "RESIDUAL (AUTO)",
       "Status": "ACTIVE",
       "Symbol": "ADA-USDT-SWAP",
