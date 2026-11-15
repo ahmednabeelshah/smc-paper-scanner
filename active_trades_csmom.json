@@ -1,32 +1,32 @@
 {
-  "last_ts": 1794528000000,
+  "last_ts": 1794614400000,
   "trades": [
     {
       "inst": "XRP-USDT-SWAP",
       "sym": "XRPUSDT",
       "side": "SHORT",
       "entry": 1.0105,
-      "stop": 1.1468035714285714,
+      "stop": 1.046575,
       "risk": 0.13630357142857139,
-      "best": 1.0105
+      "best": 0.8922
     },
     {
       "inst": "BNB-USDT-SWAP",
       "sym": "BNBUSDT",
       "side": "SHORT",
       "entry": 629.88,
-      "stop": 684.9942857142858,
+      "stop": 632.6332142857143,
       "risk": 55.114285714285735,
-      "best": 629.88
+      "best": 568.31
     },
     {
       "inst": "ETH-USDT-SWAP",
       "sym": "ETHUSDT",
       "side": "SHORT",
       "entry": 1929.09,
-      "stop": 2184.6864285714287,
+      "stop": 2014.5639285714285,
       "risk": 255.59642857142865,
-      "best": 1929.09
+      "best": 1727.83
     }
   ]
 }

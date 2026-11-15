@@ -1,5 +1,5 @@
 {
-  "last_processed_ts": 1794528000000,
+  "last_processed_ts": 1794614400000,
   "active": [
     {
       "inst": "XRP-USDT-SWAP",
@@ -11,8 +11,8 @@
       "beta": 1.358,
       "entry_z": 3.02,
       "stop_dist": 0.04122,
-      "cum_pnl": 0.0,
-      "days": 0
+      "cum_pnl": 0.013027528858091456,
+      "days": 1
     },
     {
       "inst": "DOGE-USDT-SWAP",
@@ -24,8 +24,8 @@
       "beta": 1.451,
       "entry_z": 2.82,
       "stop_dist": 0.04431,
-      "cum_pnl": 0.0,
-      "days": 0
+      "cum_pnl": 0.022590220131247438,
+      "days": 1
     },
     {
       "inst": "ADA-USDT-SWAP",
@@ -37,8 +37,8 @@
       "beta": 1.503,
       "entry_z": 2.52,
       "stop_dist": 0.05774,
-      "cum_pnl": 0.0,
-      "days": 0
+      "cum_pnl": 0.03250525145645988,
+      "days": 1
     }
   ],
   "closed": []
