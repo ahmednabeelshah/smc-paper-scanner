@@ -1,6 +1,6 @@
 {
-  "updated_utc": "2026-11-15 20:16 UTC",
-  "total_active": 3,
+  "updated_utc": "2026-11-15 20:21 UTC",
+  "total_active": 4,
   "total_closed": 0,
   "models": {
     "SMC-5M (AUTO)": {
@@ -12,6 +12,13 @@
     },
     "CSMOM (AUTO)": {
       "active_count": 0,
+      "closed_count": 0,
+      "win_rate_pct": 0.0,
+      "realized_r": 0.0,
+      "unrealized_r": 0.0
+    },
+    "HEXA_V5 (AUTO)": {
+      "active_count": 1,
       "closed_count": 0,
       "win_rate_pct": 0.0,
       "realized_r": 0.0,
@@ -76,7 +83,21 @@
   },
   "trades": [
     {
-      "Updated_UTC": "2026-11-15 20:16 UTC",
+      "Updated_UTC": "2026-11-15 20:21 UTC",
+      "Model": "HEXA_V5 (AUTO)",
+      "Status": "ACTIVE",
+      "Symbol": "INJ-USDT-SWAP",
+      "Side": "SHORT",
+      "Entry_Date": "2026-11-14",
+      "Exit_Date": "",
+      "Entry_Price": 6.808,
+      "Exit_Or_SL": 8.102586,
+      "Net_Or_Open_R": 0.0,
+      "Days_Held": 0,
+      "Traits": "mode=TREND; mult=1.0; stop_pct=0.19; votes=1"
+    },
+    {
+      "Updated_UTC": "2026-11-15 20:21 UTC",
       "Model": "RESIDUAL (AUTO)",
       "Status": "ACTIVE",
       "Symbol": "XRP-USDT-SWAP",
@@ -90,7 +111,7 @@
       "Traits": "beta=1.358; entry_z=3.02; stop_dist=0.041"
     },
     {
-      "Updated_UTC": "2026-11-15 20:16 UTC",
+      "Updated_UTC": "2026-11-15 20:21 UTC",
       "Model": "RESIDUAL (AUTO)",
       "Status": "ACTIVE",
       "Symbol": "DOGE-USDT-SWAP",
@@ -104,7 +125,7 @@
       "Traits": "beta=1.451; entry_z=2.82; stop_dist=0.044"
     },
     {
-      "Updated_UTC": "2026-11-15 20:16 UTC",
+      "Updated_UTC": "2026-11-15 20:21 UTC",
       "Model": "RESIDUAL (AUTO)",
       "Status": "ACTIVE",
       "Symbol": "ADA-USDT-SWAP",
