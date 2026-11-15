@@ -17,7 +17,9 @@ jobs:
       - run: pip install requests pandas numpy
       - env:
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TG_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
         run: |
           python scanner.py
           python scanner_v54.py
@@ -29,11 +31,15 @@ jobs:
           python scanner_macd.py
           python scanner_hvol_res.py
           python scanner_vol_macd.py
+          python scanner_atr_clv.py
+          python scanner_res_ch30.py
+          python scanner_calm_res.py
+          python scanner_calm_streak4.py
           python oi_logger.py
       - run: |
           git config user.name "scanner-bot"
           git config user.email "scanner@noreply.local"
-          git add active_trades.json active_trades_v54.json active_trades_tsmom.json active_trades_residual.json active_trades_residual_28.json active_trades_streak4.json active_trades_csmom.json active_trades_macd.json active_trades_hvol_res.json active_trades_vol_macd.json oi_funding_log.csv
+          git add active_trades.json active_trades_v54.json active_trades_tsmom.json active_trades_residual.json active_trades_residual_28.json active_trades_streak4.json active_trades_csmom.json active_trades_macd.json active_trades_hvol_res.json active_trades_vol_macd.json active_trades_atr_clv.json active_trades_res_ch30.json active_trades_calm_res.json active_trades_calm_streak4.json oi_funding_log.csv
           git commit -m "update state" || exit 0
           git pull --rebase
           git push
