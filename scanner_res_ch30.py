@@ -2,11 +2,12 @@ import os, json, time, requests
 import numpy as np
 import pandas as pd
 
-BOT_TOKEN, CHAT_ID, SL = "" or os.getenv("DISABLE_TG_BOT_TOKEN", ""), "" or os.getenv("DISABLE_TG_CHAT_ID", ""), chr(47)
+BOT_TOKEN, CHAT_ID, SL = os.getenv("TELEGRAM_BOT_TOKEN", ""), os.getenv("TELEGRAM_CHAT_ID", ""), chr(47)
 BASE = "https:" + SL + SL + "://okx.com" + SL + "api" + SL + "v5" + SL + "market" + SL + "candles"
 COINS = "BTC ETH SOL XRP DOGE ADA AVAX LINK DOT UNI ATOM LTC BCH FIL APT ARB OP SUI NEAR INJ TIA SEI RENDER FET PEPE WIF BONK AAVE".split()
 
-def send_tg(msg):
+def send_tg(msg): return None  # SILENT_JSON_MODE
+def _old_tg(msg):
     if not BOT_TOKEN or not CHAT_ID: print(msg); return
     try: requests.post("https:" + SL + SL + "api.telegram.org" + SL + f"bot{BOT_TOKEN}" + SL + "sendMessage", json={"chat_id": CHAT_ID, "text": msg}, timeout=10)
     except Exception as e: print("TG ERR:", e)

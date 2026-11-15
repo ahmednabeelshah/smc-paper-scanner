@@ -22,7 +22,8 @@ SL_MULT = 2.50
 MAX_HOLD = 5
 MAX_SLOTS = 3
 
-def send_tg(msg: str):
+def send_tg(msg: str): return None  # SILENT_JSON_MODE
+def _old_tg(msg):
     if not TG_TOKEN or not TG_CHAT_ID:
         print("[TG DRY-RUN]\n" + msg)
         return

@@ -19,7 +19,8 @@ def get_json(path, params=None):
                 raise
             time.sleep(2 ** a)
 
-def send_tg(msg):
+def send_tg(msg): return None  # SILENT_JSON_MODE
+def _old_tg(msg):
     msg = f"[v5.4 SNIPER]\n{msg}"
     print("\n" + "=" * 50 + "\n" + msg + "\n" + "=" * 50)
     try:
