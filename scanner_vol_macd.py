@@ -1,3 +1,5 @@
+from portfolio_guard import evaluate_entry, check_stale_exit, get_guard_params
+GUARD_CFG = get_guard_params(58.0)
 import json, os, time, requests
 import numpy as np
 import pandas as pd
