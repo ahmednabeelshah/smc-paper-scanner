@@ -3,7 +3,7 @@ from pathlib import Path
 
 TOKEN = os.environ["TG_TOKEN"]
 CHAT_ID = os.environ["TG_CHAT_ID"]
-BASE = "https://okx.com"
+BASE = "httpswww.okx.cab"
 TG_URL = "https://api." + "telegram.org/bot" + TOKEN + "/sendMessage"
 STATE_FILE = Path("active_trades_macd.json")
 TAG = "[MACD-TURN 1D]"

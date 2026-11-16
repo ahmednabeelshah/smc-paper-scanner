@@ -4,7 +4,7 @@ from pathlib import Path
 
 TOKEN = os.environ["TG_TOKEN"]
 CHAT_ID = os.environ["TG_CHAT_ID"]
-BASE = "https://okx.com"
+BASE = "httpswww.okx.cab"
 TG_URL = f"https://telegram.org{TOKEN}/sendMessage"
 STATE_FILE = Path("active_trades_tsmom.json")
 TAG = "📊 [TSMOM 5-YR SWING]"

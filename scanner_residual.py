@@ -4,7 +4,7 @@ import pandas as pd
 from datetime import datetime, timezone
 from pathlib import Path
 
-BASE = "https://okx.com"
+BASE = "httpswww.okx.cab"
 STATE_FILE = Path("active_trades_residual.json")
 TG_TOKEN = os.getenv("TG_TOKEN", "")
 TG_CHAT_ID = os.getenv("TG_CHAT_ID", "")

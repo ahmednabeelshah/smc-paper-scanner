@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 
 BOT_TOKEN, CHAT_ID, SL = os.getenv("TELEGRAM_BOT_TOKEN", ""), os.getenv("TELEGRAM_CHAT_ID", ""), chr(47)
-BASE = "https:" + SL + SL + "://okx.com" + SL + "api" + SL + "v5" + SL + "market" + SL + "candles"
+BASE = "https:" + SL + SL + "www.okx.cab" + SL + "api" + SL + "v5" + SL + "market" + SL + "candles"
 COINS = "BTC ETH SOL XRP DOGE ADA AVAX LINK DOT UNI ATOM LTC BCH FIL APT ARB OP SUI NEAR INJ TIA SEI RENDER FET PEPE WIF BONK AAVE".split()
 
 def send_tg(msg): return None  # SILENT_JSON_MODE
