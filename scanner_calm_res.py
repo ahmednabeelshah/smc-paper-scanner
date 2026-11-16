@@ -2,7 +2,9 @@ import os, json, time, requests
 import numpy as np
 import pandas as pd
 
-BOT_TOKEN, CHAT_ID, SL = os.getenv("TELEGRAM_BOT_TOKEN", ""), os.getenv("TELEGRAM_CHAT_ID", ""), chr(47)
+BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN") or os.getenv("TG_TOKEN", "")
+CHAT_ID = os.getenv("TELEGRAM_CHAT_ID") or os.getenv("TG_CHAT_ID", "")
+SL = chr(47)
 HOST = ".".join(["www", "okx", "cab"])
 BASE = "https:" + SL + SL + HOST + SL + "api" + SL + "v5" + SL + "market" + SL + "candles"
 COINS = "BTC ETH SOL XRP DOGE ADA AVAX LINK DOT UNI ATOM LTC BCH FIL APT ARB OP SUI NEAR INJ TIA SEI RENDER FET PEPE WIF BONK AAVE".split()
