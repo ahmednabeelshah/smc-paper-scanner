@@ -115,10 +115,10 @@
       "trig_22": 63.07642399999998,
       "lock_10": 64.80091999999999,
       "trailed_22": false,
-      "status": "PENDING",
-      "last_chk": 1794838200000,
+      "status": "ACTIVE",
+      "last_chk": 1794838800000,
       "exp_ms": 1794841200000,
-      "fill_ms": 0,
+      "fill_ms": 1794838800000,
       "hit_tp1": false,
       "locked_pct": 0.0
     }
