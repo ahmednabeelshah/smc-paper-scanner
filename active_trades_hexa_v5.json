@@ -6,15 +6,15 @@
       "inst": "INJ-USDT-SWAP",
       "side": "SHORT",
       "entry": 6.808,
-      "sl": 8.102586,
-      "best": 6.808,
+      "sl": 7.797906,
+      "best": 6.552,
       "stop_pct": 0.1901565385261038,
       "mult": 1.0,
       "votes": 1,
-      "days": 0,
-      "cum_pnl": 0.0,
+      "days": 1,
+      "cum_pnl": -0.026,
       "entry_ts": 1794614400000,
-      "last_ts": 1794614400000
+      "last_ts": 1794700800000
     }
   ],
   "closed": []

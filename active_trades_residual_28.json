@@ -1,5 +1,5 @@
 {
-  "last_ts": 1794614400000,
+  "last_ts": 1794700800000,
   "trades": [
     {
       "inst": "INJ-USDT-SWAP",
@@ -10,7 +10,7 @@
       "b_entry": 68286.7,
       "beta": 1.601,
       "stop_pct": 0.1212,
-      "days": 1
+      "days": 2
     },
     {
       "inst": "BNB-USDT-SWAP",
@@ -21,6 +21,17 @@
       "b_entry": 64124.8,
       "beta": 0.804,
       "stop_pct": 0.0295,
+      "days": 1
+    },
+    {
+      "inst": "XRP-USDT-SWAP",
+      "sym": "XRPUSDT",
+      "side": "SHORT",
+      "side_num": -1,
+      "entry": 0.9735,
+      "b_entry": 65311.0,
+      "beta": 1.245,
+      "stop_pct": 0.0356,
       "days": 0
     }
   ]

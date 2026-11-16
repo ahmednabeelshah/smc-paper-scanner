@@ -1,5 +1,5 @@
 {
-  "updated_utc": "2026-11-15 23:56 UTC",
+  "updated_utc": "2026-11-16 00:03 UTC",
   "total_active": 4,
   "total_closed": 0,
   "models": {
@@ -22,7 +22,7 @@
       "closed_count": 0,
       "win_rate_pct": 0.0,
       "realized_r": 0.0,
-      "unrealized_r": 0.0
+      "unrealized_r": -0.14
     },
     "HVOL-RES 1D (CORE)": {
       "active_count": 0,
@@ -43,7 +43,7 @@
       "closed_count": 0,
       "win_rate_pct": 0.0,
       "realized_r": 0.0,
-      "unrealized_r": 1.39
+      "unrealized_r": -0.38
     },
     "RESIDUAL_28 (AUTO)": {
       "active_count": 0,
@@ -83,7 +83,7 @@
   },
   "trades": [
     {
-      "Updated_UTC": "2026-11-15 23:56 UTC",
+      "Updated_UTC": "2026-11-16 00:03 UTC",
       "Model": "HEXA_V5 (AUTO)",
       "Status": "ACTIVE",
       "Symbol": "INJ-USDT-SWAP",
@@ -91,13 +91,13 @@
       "Entry_Date": "2026-11-14",
       "Exit_Date": "",
       "Entry_Price": 6.808,
-      "Exit_Or_SL": 8.102586,
-      "Net_Or_Open_R": 0.0,
-      "Days_Held": 0,
+      "Exit_Or_SL": 7.797906,
+      "Net_Or_Open_R": -0.137,
+      "Days_Held": 1,
       "Traits": "mode=TREND; mult=1.0; stop_pct=0.19; votes=1"
     },
     {
-      "Updated_UTC": "2026-11-15 23:56 UTC",
+      "Updated_UTC": "2026-11-16 00:03 UTC",
       "Model": "RESIDUAL (AUTO)",
       "Status": "ACTIVE",
       "Symbol": "XRP-USDT-SWAP",
@@ -106,12 +106,12 @@
       "Exit_Date": "",
       "Entry_Price": 1.0105,
       "Exit_Or_SL": "StopDist:4.12%",
-      "Net_Or_Open_R": 0.316,
-      "Days_Held": 1,
+      "Net_Or_Open_R": -0.662,
+      "Days_Held": 2,
       "Traits": "beta=1.358; entry_z=3.02; stop_dist=0.041"
     },
     {
-      "Updated_UTC": "2026-11-15 23:56 UTC",
+      "Updated_UTC": "2026-11-16 00:03 UTC",
       "Model": "RESIDUAL (AUTO)",
       "Status": "ACTIVE",
       "Symbol": "DOGE-USDT-SWAP",
@@ -120,12 +120,12 @@
       "Exit_Date": "",
       "Entry_Price": 0.06449,
       "Exit_Or_SL": "StopDist:4.43%",
-      "Net_Or_Open_R": 0.51,
-      "Days_Held": 1,
+      "Net_Or_Open_R": 0.128,
+      "Days_Held": 2,
       "Traits": "beta=1.451; entry_z=2.82; stop_dist=0.044"
     },
     {
-      "Updated_UTC": "2026-11-15 23:56 UTC",
+      "Updated_UTC": "2026-11-16 00:03 UTC",
       "Model": "RESIDUAL (AUTO)",
       "Status": "ACTIVE",
       "Symbol": "ADA-USDT-SWAP",
@@ -134,8 +134,8 @@
       "Exit_Date": "",
       "Entry_Price": 0.1684,
       "Exit_Or_SL": "StopDist:5.77%",
-      "Net_Or_Open_R": 0.563,
-      "Days_Held": 1,
+      "Net_Or_Open_R": 0.152,
+      "Days_Held": 2,
       "Traits": "beta=1.503; entry_z=2.52; stop_dist=0.058"
     }
   ]

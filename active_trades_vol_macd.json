@@ -1,14 +1,14 @@
 {
-  "last_ts": 1794614400000,
+  "last_ts": 1794700800000,
   "trades": [
     {
       "inst": "INJ-USDT-SWAP",
       "sym": "INJUSDT",
       "side": "SHORT",
       "entry": 6.808,
-      "stop": 8.606035714285715,
+      "stop": 8.394321428571429,
       "risk": 1.7980357142857148,
-      "best": 6.808
+      "best": 6.552
     }
   ]
 }
