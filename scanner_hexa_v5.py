@@ -91,7 +91,7 @@ def main():
         m2 = -1 if (acc<1.20 and strk4 and z4>2.25) else 0
         mv = m1 + m2
         if mv < 0:
-            sp = max(2.0*rv, 0.015)
+            sp = max(1.25*rv, 0.015)
             m_cands.append((abs(z1)+0.5*abs(z4), sym, cp, bt, sp, 1.5 if abs(mv)>=2 else 1.0, 5 if m1 else 4, round(z1, 2)))
     for _, side, sym, cp, sp, mult, votes in sorted(t_cands, reverse=True)[:3-len(t_open)]:
         sl = round(cp*(1.0-sp) if side=="LONG" else cp*(1.0+sp), 6)
@@ -102,3 +102,4 @@ def main():
         send_tg(f"{TAG} NEW SHORT-MR {sym}-USDT-SWAP @ {cp:.4f} | Stop: {sp*100:.1f}% | Z1={z_val} ({mult}x)")
     save_st(SF, st)
 if __name__ == "__main__": main()
+    
