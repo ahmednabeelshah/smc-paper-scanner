@@ -4,7 +4,8 @@
     "BNBUSDT_SHORT_1794668400000",
     "ETHUSDT_SHORT_1794672000000",
     "PEPEUSDT_SHORT_1794672000000",
-    "XRPUSDT_SHORT_1794675600000"
+    "XRPUSDT_SHORT_1794675600000",
+    "HYPEUSDT_SHORT_1794834000000"
   ],
   "trades": [
     {
@@ -98,6 +99,25 @@
       "status": "EXPIRED_2H",
       "last_chk": 1794682800000,
       "exp_ms": 1794682800000,
+      "fill_ms": 0,
+      "hit_tp1": false,
+      "locked_pct": 0.0
+    },
+    {
+      "symbol": "HYPEUSDT",
+      "side": "SHORT",
+      "entry": 66.238,
+      "confirm": 66.271119,
+      "stop": 67.67508000000001,
+      "tp1": 64.08237999999999,
+      "tp2": 61.92675999999997,
+      "be": 66.138643,
+      "trig_22": 63.07642399999998,
+      "lock_10": 64.80091999999999,
+      "trailed_22": false,
+      "status": "PENDING",
+      "last_chk": 1794834000000,
+      "exp_ms": 1794841200000,
       "fill_ms": 0,
       "hit_tp1": false,
       "locked_pct": 0.0
