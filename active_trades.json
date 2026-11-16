@@ -61,7 +61,8 @@
     "BCHUSDT_SHORT_1794693600000",
     "LINKUSDT_SHORT_1794693600000",
     "SNDKUSDT_SHORT_1794798000000",
-    "XAGUSDT_SHORT_1794798000000"
+    "XAGUSDT_SHORT_1794798000000",
+    "SKHYUSDT_SHORT_1794808800000"
   ],
   "trades": [
     {
@@ -522,7 +523,7 @@
       "tp2": 630.6021400000001,
       "be": 676.154245,
       "status": "ACTIVE",
-      "last_chk": 1794810900000,
+      "last_chk": 1794811200000,
       "exp_ms": 1794596400000,
       "fill_ms": 1794589800000,
       "hit_tp1": false,
@@ -1132,6 +1133,22 @@
       "status": "EXPIRED_2H",
       "last_chk": 1794805200000,
       "exp_ms": 1794805200000,
+      "fill_ms": 0,
+      "hit_tp1": false,
+      "locked_pct": 0.0
+    },
+    {
+      "symbol": "SKHYUSDT",
+      "side": "SHORT",
+      "entry": 126.56,
+      "confirm": 126.62328,
+      "stop": 128.53656,
+      "tp1": 123.59515999999999,
+      "tp2": 120.63031999999998,
+      "be": 126.37016000000001,
+      "status": "PENDING",
+      "last_chk": 1794808800000,
+      "exp_ms": 1794816000000,
       "fill_ms": 0,
       "hit_tp1": false,
       "locked_pct": 0.0
