@@ -62,7 +62,8 @@
     "LINKUSDT_SHORT_1794693600000",
     "SNDKUSDT_SHORT_1794798000000",
     "XAGUSDT_SHORT_1794798000000",
-    "SKHYUSDT_SHORT_1794808800000"
+    "SKHYUSDT_SHORT_1794808800000",
+    "SOXLUSDT_SHORT_1794812400000"
   ],
   "trades": [
     {
@@ -523,7 +524,7 @@
       "tp2": 630.6021400000001,
       "be": 676.154245,
       "status": "ACTIVE",
-      "last_chk": 1794812100000,
+      "last_chk": 1794812400000,
       "exp_ms": 1794596400000,
       "fill_ms": 1794589800000,
       "hit_tp1": false,
@@ -1147,9 +1148,25 @@
       "tp2": 120.63031999999998,
       "be": 126.37016000000001,
       "status": "ACTIVE",
-      "last_chk": 1794812100000,
+      "last_chk": 1794812400000,
       "exp_ms": 1794816000000,
       "fill_ms": 1794810900000,
+      "hit_tp1": false,
+      "locked_pct": 0.0
+    },
+    {
+      "symbol": "SOXLUSDT",
+      "side": "SHORT",
+      "entry": 53.37,
+      "confirm": 53.396685,
+      "stop": 55.430640000000004,
+      "tp1": 50.27903999999999,
+      "tp2": 47.18807999999998,
+      "be": 53.289945,
+      "status": "PENDING",
+      "last_chk": 1794812400000,
+      "exp_ms": 1794819600000,
+      "fill_ms": 0,
       "hit_tp1": false,
       "locked_pct": 0.0
     }
