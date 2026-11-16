@@ -2,7 +2,7 @@ import csv, time, requests
 from datetime import datetime, timezone
 from pathlib import Path
 
-BASE = "https://www.www.okx.cab"
+BASE = "https://www.okx.cab"
 LOG_FILE = Path("oi_funding_log.csv")
 
 def get_json(path, params=None):

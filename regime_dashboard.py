@@ -9,7 +9,7 @@ CORE_12 = [
     "BNB-USDT-SWAP", "DOT-USDT-SWAP", "LTC-USDT-SWAP", "BCH-USDT-SWAP"
 ]
 
-OKX_CANDLES_URL = "https://www.www.okx.cab/api/v5/market/candles"
+OKX_CANDLES_URL = "https://www.okx.cab/api/v5/market/candles"
 
 def fetch_4h_closed(inst_id: str, limit: int = 80) -> pd.DataFrame:
     resp = requests.get(
