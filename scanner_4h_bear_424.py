@@ -55,8 +55,8 @@ def fetch_1h(ticker, rng="120d"):
             if r.status_code == 200:
                 res = r.json().get("chart", {}).get("result", [])
                 if not res: return None
-                r0 = res[0]
-                q = r0.get("indicators", {}).get("quote", [{}])[0]
+                r0 = res
+                q = r0.get("indicators", {}).get("quote", [{}])
                 df = pd.DataFrame({"High": q.get("high", []), "Low": q.get("low", []), "Close": q.get("close", []), "Volume": q.get("volume", [])}, index=pd.to_datetime(r0.get("timestamp", []), unit="s", utc=True))
                 return df.dropna(subset=["Close"])
         except Exception:
@@ -144,7 +144,7 @@ def main():
                     if (v_arr[-1] / vmed if vmed > 1e-12 else 99.0) > 1.50: continue
                     side = "SHORT" if z6 >= 2.0 else ("LONG" if z6 <= -3.2 else None)
                     if side:
-                        pe = live_bar.get(pair, (c_arr[-1], 0, 0))[0]
+                        pe = live_bar.get(pair, (c_arr[-1], 0, 0))
                         sl_dist = float(np.clip(1.55 * sig * np.sqrt(6.0), 0.015, 0.035))
                         tp_dist = (1.50 / 1.55) * sl_dist
                         sl_p = pe * (1.0 + sl_dist) if side == "SHORT" else pe * (1.0 - sl_dist)
