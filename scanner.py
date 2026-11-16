@@ -2,16 +2,16 @@ import json, os, time, requests
 from datetime import datetime, timezone
 from pathlib import Path
 
-TOKEN = os.environ["TG_TOKEN"]
-CHAT_ID = os.environ["TG_CHAT_ID"]
+TOKEN = os.getenv("TG_TOKEN") or os.getenv("TELEGRAM_BOT_TOKEN", "")
+CHAT_ID = os.getenv("TG_CHAT_ID") or os.getenv("TELEGRAM_CHAT_ID", "")
 BASE = "https:" + chr(47) + chr(47) + ".".join(["www", "okx", "cab"])
-TG_URL = "https://api." + "telegram.org/bot" + TOKEN + "/sendMessage"
+TG_URL = "https:" + chr(47) + chr(47) + "api.telegram.org" + chr(47) + "bot" + TOKEN + chr(47) + "sendMessage"
 STATE_FILE = Path("active_trades.json")
 
 def get_json(path, params=None):
     for a in range(4):
         try:
-            r = requests.get(BASE + path, params=params, timeout=15)
+            r = requests.get(BASE + path, params=params, headers={"User-Agent": "Mozilla/5.0"}, timeout=15)
             r.raise_for_status()
             return r.json()
         except Exception:
