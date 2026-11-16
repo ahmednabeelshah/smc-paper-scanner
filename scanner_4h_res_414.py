@@ -1,8 +1,6 @@
-import os
-import json
-import time
-import urllib.request
+import os, json, time, urllib.request
 from datetime import datetime, timezone
+from concurrent.futures import ThreadPoolExecutor
 import numpy as np
 import pandas as pd
 
@@ -10,7 +8,6 @@ try:
     import telegram_notify
 except ImportError:
     telegram_notify = None
-
 import master_trade_logger
 
 STRATEGY_NAME   = "4H_RES_414"
@@ -32,12 +29,10 @@ CLUSTERS = {
 COIN_CLUSTER = {c: cl for cl, coins in CLUSTERS.items() for c in coins}
 UNIVERSE     = ["BTC"] + list(COIN_CLUSTER.keys())
 
-
-def fetch_json(url, timeout=10):
+def fetch_json(url, timeout=8):
     req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
     with urllib.request.urlopen(req, timeout=timeout) as resp:
         return json.loads(resp.read().decode("utf-8"))
-
 
 def fetch_okx_1h(sym, pages=14):
     inst = f"{sym}-USDT-SWAP"
@@ -55,7 +50,7 @@ def fetch_okx_1h(sym, pages=14):
         rows.extend(data)
         last_item = data.pop()
         after = last_item.pop(0)
-        time.sleep(0.08)
+        time.sleep(0.05)
     if not rows:
         return pd.DataFrame()
     df = pd.DataFrame(rows, columns=["ts", "o", "h", "l", "c", "v", "vc", "vq", "conf"])
@@ -64,7 +59,6 @@ def fetch_okx_1h(sym, pages=14):
     for col in ["o", "h", "l", "c", "v"]:
         df[col] = df[col].astype(float)
     return df.drop_duplicates("ts").sort_values("ts").set_index("ts")[["o", "h", "l", "c", "v"]]
-
 
 def fetch_kucoin_1h(sym, days=65):
     pair = f"{sym}-USDT"
@@ -83,31 +77,25 @@ def fetch_kucoin_1h(sym, days=65):
         df[col] = df[col].astype(float)
     return df.drop_duplicates("ts").sort_values("ts").set_index("ts")[["o", "h", "l", "c", "v"]]
 
-
-def load_4h_universe():
+def fetch_one_symbol(sym):
     now_utc = datetime.now(timezone.utc)
     curr_4h_open = now_utc.replace(hour=(now_utc.hour // 4) * 4, minute=0, second=0, microsecond=0)
-    ohlc_4h = {}
+    df1h = fetch_okx_1h(sym)
+    if len(df1h) < 1200:
+        df1h = fetch_kucoin_1h(sym)
+    if len(df1h) < 1200:
+        return sym, None
+    df4 = df1h.resample("4h", label="left", closed="left").agg({"o": "first", "h": "max", "l": "min", "c": "last", "v": "sum"}).dropna()
+    closed_4h = df4[df4.index < pd.Timestamp(curr_4h_open)]
+    if len(closed_4h) < 310:
+        return sym, None
+    recent_1h = df1h.iloc[-2:]
+    return sym, (closed_4h, float(df1h["c"].iloc[-1]), float(recent_1h["h"].max()), float(recent_1h["l"].min()))
 
-    for sym in UNIVERSE:
-        df1h = fetch_okx_1h(sym)
-        if len(df1h) < 1200:
-            df1h = fetch_kucoin_1h(sym)
-        if len(df1h) < 1200:
-            continue
-        df4 = df1h.resample("4h", label="left", closed="left").agg({
-            "o": "first", "h": "max", "l": "min", "c": "last", "v": "sum"
-        }).dropna()
-        closed_4h = df4[df4.index < pd.Timestamp(curr_4h_open)]
-        if len(closed_4h) >= 310:
-            ohlc_4h[sym] = (
-                closed_4h,
-                float(df1h["c"].iloc[-1]),
-                float(df1h["h"].iloc[-4:].max()),
-                float(df1h["l"].iloc[-4:].min())
-            )
-    return ohlc_4h
-
+def load_4h_universe():
+    with ThreadPoolExecutor(max_workers=8) as ex:
+        res = list(ex.map(fetch_one_symbol, UNIVERSE))
+    return {sym: val for sym, val in res if val is not None}
 
 def send_tg(msg):
     if telegram_notify and hasattr(telegram_notify, "send_alert"):
@@ -117,17 +105,16 @@ def send_tg(msg):
             pass
     print(msg)
 
-
 def run_scanner():
-    now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    print(f"[{now_str}] Running {STRATEGY_NAME} Scanner...")
-
+    now_utc = datetime.now(timezone.utc)
+    now_str = now_utc.strftime("%Y-%m-%d %H:%M UTC")
+    is_entry_window = (now_utc.hour % 4 == 0) and (now_utc.minute < 15)
+    print(f"[{now_str}] Running {STRATEGY_NAME} | EntryWindow={is_entry_window}")
     data = load_4h_universe()
     if "BTC" not in data:
         print("BTC data unavailable - aborting scan.")
         return
-
-    btc_df, btc_px, _, _ = data["BTC"]
+    btc_df, _, _, _ = data["BTC"]
     idx = btc_df.index
     btc_c = btc_df["c"]
     btc_sma300 = btc_c.rolling(300, min_periods=150).mean().iloc[-1]
@@ -137,28 +124,23 @@ def run_scanner():
 
     active = master_trade_logger.load_active_trades(STATE_FILE)
     still_active = []
-
     for tr in active:
         sym = tr["symbol"].replace("-USDT", "")
         if sym not in data:
             still_active.append(tr)
             continue
-
-        _, curr_px, hi_4h, lo_4h = data[sym]
+        _, curr_px, hi_live, lo_live = data[sym]
         ep = float(tr["entry_price"])
         sl = float(tr["sl"])
         tp = float(tr["tp"])
         sl_pct = float(tr["sl_pct"]) / 100.0
         direction = tr["direction"]
         d_sign = -1 if direction == "SHORT" else 1
-
         open_dt = datetime.strptime(tr["open_time"], "%Y-%m-%d %H:%M UTC").replace(tzinfo=timezone.utc)
-        hrs_held = (datetime.now(timezone.utc) - open_dt).total_seconds() / 3600.0
-
-        best_px = lo_4h if direction == "SHORT" else hi_4h
+        hrs_held = (now_utc - open_dt).total_seconds() / 3600.0
+        best_px = min(curr_px, lo_live) if direction == "SHORT" else max(curr_px, hi_live)
         mfe_r = (d_sign * (best_px - ep) / ep) / max(sl_pct, 1e-6)
         tr["max_r"] = round(max(float(tr.get("max_r", 0.0)), mfe_r), 2)
-
         if not tr.get("be_moved", False) and mfe_r >= BE_TRIGGER_R:
             new_sl = ep * (1.0 - BE_LOCK_PCT) if direction == "SHORT" else ep * (1.0 + BE_LOCK_PCT)
             if (direction == "SHORT" and new_sl < sl) or (direction == "LONG" and new_sl > sl):
@@ -166,36 +148,32 @@ def run_scanner():
                 tr["sl"] = sl
                 tr["be_moved"] = True
                 send_tg(f"[{STRATEGY_NAME}] BE LOCK (+0.2%): {tr['symbol']} {direction} | New SL: {sl}")
-
         exit_px, close_reason = None, None
         if direction == "SHORT":
-            if hi_4h >= sl:
+            if hi_live >= sl:
                 exit_px, close_reason = sl, ("BE_STOP" if tr.get("be_moved") else "STOP_LOSS")
-            elif lo_4h <= tp:
+            elif lo_live <= tp:
                 exit_px, close_reason = tp, "TAKE_PROFIT"
         else:
-            if lo_4h <= sl:
+            if lo_live <= sl:
                 exit_px, close_reason = sl, ("BE_STOP" if tr.get("be_moved") else "STOP_LOSS")
-            elif hi_4h >= tp:
+            elif hi_live >= tp:
                 exit_px, close_reason = tp, "TAKE_PROFIT"
-
         if exit_px is None and hrs_held >= MAX_HOLD_HOURS:
             exit_px, close_reason = curr_px, "TIME_EXIT_60H"
-
         if exit_px is not None:
             master_trade_logger.log_trade_close(tr, exit_px, close_reason)
             send_tg(f"[{STRATEGY_NAME}] CLOSED {tr['symbol']} {direction} | {close_reason} @ {exit_px:.4f}")
         else:
             still_active.append(tr)
 
-    if len(still_active) < MAX_SLOTS:
+    if is_entry_window and len(still_active) < MAX_SLOTS:
         open_syms = {t["symbol"].replace("-USDT", "") for t in still_active}
         cl_counts = {}
         for t in still_active:
             s = t["symbol"].replace("-USDT", "")
             cl = COIN_CLUSTER.get(s, "Other")
             cl_counts[cl] = cl_counts.get(cl, 0) + 1
-
         candidates = []
         for sym in COIN_CLUSTER:
             if sym in open_syms or sym not in data:
@@ -204,43 +182,35 @@ def run_scanner():
             df4 = df4.reindex(idx).ffill(limit=2)
             if df4["c"].isna().tail(200).any():
                 continue
-
             ret_c = np.log(df4["c"] / df4["c"].shift(1))
             beta = (ret_c.rolling(180, min_periods=120).cov(ret_b) / var_b).clip(-3.0, 3.0)
             res = ret_c - beta * ret_b
             s4h = res.rolling(180, min_periods=120).std().iloc[-1]
             if not np.isfinite(s4h) or s4h <= 0:
                 continue
-
             z3 = res.iloc[-3:].sum() / (s4h * np.sqrt(3))
             z6 = res.iloc[-6:].sum() / (s4h * np.sqrt(6))
             zv = z3 if abs(z3) >= abs(z6) else z6
-
             v_mean = df4["v"].iloc[-60:].mean()
             vrel = (df4["v"].iloc[-1] / v_mean) if v_mean > 0 else 99.0
-
             if np.isfinite(zv) and abs(zv) >= 2.2 and vrel <= 1.50:
                 d_sign = -1 if zv > 0 else 1
                 if d_sign != btc_trend:
                     continue
                 sig_24h = s4h * np.sqrt(6)
                 candidates.append((abs(zv), sym, COIN_CLUSTER[sym], d_sign, sig_24h, curr_px, zv, vrel))
-
         candidates.sort(key=lambda x: x, reverse=True)
-
         for _, sym, cl, d_sign, sig_24h, pe, zv, vrel in candidates:
             if len(still_active) >= MAX_SLOTS:
                 break
             if cl_counts.get(cl, 0) >= MAX_PER_CLUSTER:
                 continue
-
             dsl = max(MIN_STOP_FLOOR, 1.55 * sig_24h)
             dtp = 1.50 * sig_24h
             direction = "SHORT" if d_sign == -1 else "LONG"
             sl = round(pe * (1.0 + dsl) if d_sign == -1 else pe * (1.0 - dsl), 6)
             tp = round(pe * (1.0 - dtp) if d_sign == -1 else pe * (1.0 + dtp), 6)
             reason = f"Z={zv:+.2f}|VRel={vrel:.2f}|CL={cl}|BTC50={'UP' if btc_trend==1 else 'DN'}"
-
             new_tr = master_trade_logger.log_trade_open(
                 strategy_name=STRATEGY_NAME,
                 symbol=f"{sym}-USDT",
@@ -257,7 +227,6 @@ def run_scanner():
     master_trade_logger.save_active_trades(STATE_FILE, still_active)
     print(f"[{STRATEGY_NAME}] Scan Complete. Active Slots: {len(still_active)}/{MAX_SLOTS}")
 
-
 if __name__ == "__main__":
     run_scanner()
-      
+    
