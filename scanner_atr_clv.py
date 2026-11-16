@@ -2,8 +2,11 @@ import os, json, time, requests
 import numpy as np
 import pandas as pd
 
-BOT_TOKEN, CHAT_ID, SL = os.getenv("TELEGRAM_BOT_TOKEN", ""), os.getenv("TELEGRAM_CHAT_ID", ""), chr(47)
-BASE = "https:" + SL + SL + "://okx.com" + SL + "api" + SL + "v5" + SL + "market" + SL + "candles"
+BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN") or os.getenv("TG_TOKEN", "")
+CHAT_ID = os.getenv("TELEGRAM_CHAT_ID") or os.getenv("TG_CHAT_ID", "")
+SL = chr(47)
+HOST = ".".join(["www", "okx", "cab"])
+BASE = "https:" + SL + SL + HOST + SL + "api" + SL + "v5" + SL + "market" + SL + "candles"
 COINS = "BTC ETH SOL XRP DOGE ADA AVAX LINK DOT UNI ATOM LTC BCH FIL APT ARB OP SUI NEAR INJ TIA SEI RENDER FET PEPE WIF BONK AAVE".split()
 
 def send_tg(msg):
@@ -11,15 +14,15 @@ def send_tg(msg):
     try: requests.post("https:" + SL + SL + "api.telegram.org" + SL + f"bot{BOT_TOKEN}" + SL + "sendMessage", json={"chat_id": CHAT_ID, "text": msg}, timeout=10)
     except Exception as e: print("TG ERR:", e)
 
-def load_st(fn): return json.load(open(fn)) if os.path.exists(fn) else {"active": [], "closed": []}
+def load_st(fn): return json.load(open(fn)) if os.path.exists(fn) else {"active": list(), "closed": list()}
 def save_st(fn, st): json.dump(st, open(fn, "w"), indent=2)
 
 def fetch_1d(sym, limit=140):
     for att in range(4):
         try:
-            r = requests.get(BASE, params={"instId": sym + "-USDT-SWAP", "bar": "1Dutc", "limit": str(limit)}, timeout=10).json()
+            r = requests.get(BASE, params={"instId": sym + "-USDT-SWAP", "bar": "1Dutc", "limit": str(limit)}, headers={"User-Agent": "Mozilla/5.0"}, timeout=10).json()
             if r.get("code") == "0":
-                rows = sorted([(int(ts), float(o), float(h), float(l), float(c), float(vq)) for ts, o, h, l, c, v, vc, vq, cfm in r.get("data", []) if str(cfm) == "1"])
+                rows = sorted([(int(ts), float(o), float(h), float(l), float(c), float(vq)) for ts, o, h, l, c, v, vc, vq, cfm in r.get("data", list()) if str(cfm) == "1"])
                 df = pd.DataFrame(rows, columns=["ts", "o", "h", "l", "c", "vq"]).set_index("ts")
                 tr = np.maximum(df["h"]-df["l"], np.maximum(abs(df["h"]-df["c"].shift(1)), abs(df["l"]-df["c"].shift(1))))
                 df["atr"], df["atr50"] = tr.rolling(14).mean(), tr.rolling(50).mean()
@@ -35,7 +38,7 @@ SF, TAG = "active_trades_atr_clv.json", "[ATR-CLV 1D]"
 def main():
     st, btc = load_st(SF), fetch_1d("BTC", 120)
     if len(btc) < 60: return
-    lts, bull, still = int(btc.index[-1]), bool(btc["c"].iloc[-1] > btc["e50"].iloc[-1]), []
+    lts, bull, still = int(btc.index[-1]), bool(btc["c"].iloc[-1] > btc["e50"].iloc[-1]), list()
     for p in st["active"]:
         df = fetch_1d(p["sym"], 40)
         if len(df) == 0 or int(df.index[-1]) <= p.get("last_ts", p["entry_ts"]): still.append(p); continue
@@ -51,7 +54,7 @@ def main():
         still.append(p)
     st["active"] = still
     if len(st["active"]) < 3:
-        cands = []
+        cands = list()
         for sym in COINS[1:]:
             if any(x["sym"] == sym for x in st["active"]): continue
             df = fetch_1d(sym, 80)
