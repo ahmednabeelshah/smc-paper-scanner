@@ -75,7 +75,8 @@
     "NEARUSDT_SHORT_1794837600000",
     "UNIUSDT_SHORT_1794837600000",
     "PUMPUSDT_SHORT_1794837600000",
-    "CLUSDT_SHORT_1794855600000"
+    "CLUSDT_SHORT_1794855600000",
+    "PUMPUSDT_SHORT_1794884400000"
   ],
   "trades": [
     {
@@ -1352,7 +1353,7 @@
       "tp2": 0.0026025039999999994,
       "be": 0.002837737,
       "status": "ACTIVE",
-      "last_chk": 1794886500000,
+      "last_chk": 1794886800000,
       "exp_ms": 1794844800000,
       "fill_ms": 1794839400000,
       "hit_tp1": false,
@@ -1370,6 +1371,22 @@
       "status": "EXPIRED_2H",
       "last_chk": 1794862800000,
       "exp_ms": 1794862800000,
+      "fill_ms": 0,
+      "hit_tp1": false,
+      "locked_pct": 0.0
+    },
+    {
+      "symbol": "PUMPUSDT",
+      "side": "SHORT",
+      "entry": 0.002776,
+      "confirm": 0.0027773879999999996,
+      "stop": 0.00284568,
+      "tp1": 0.0026714799999999995,
+      "tp2": 0.0025669599999999988,
+      "be": 0.002771836,
+      "status": "PENDING",
+      "last_chk": 1794884400000,
+      "exp_ms": 1794891600000,
       "fill_ms": 0,
       "hit_tp1": false,
       "locked_pct": 0.0
