@@ -81,7 +81,10 @@
     "ETHUSDT_SHORT_1794913200000",
     "SNDKUSDT_SHORT_1794913200000",
     "NVDAUSDT_SHORT_1794913200000",
-    "MUUSDT_SHORT_1794913200000"
+    "MUUSDT_SHORT_1794913200000",
+    "NVDAUSDT_SHORT_1794931200000",
+    "MUUSDT_SHORT_1794931200000",
+    "KORUUSDT_SHORT_1794931200000"
   ],
   "trades": [
     {
@@ -1422,7 +1425,7 @@
       "tp2": 1733.6497800000009,
       "be": 1808.4732150000002,
       "status": "ACTIVE",
-      "last_chk": 1794930900000,
+      "last_chk": 1794931200000,
       "exp_ms": 1794920400000,
       "fill_ms": 1794915300000,
       "hit_tp1": true,
@@ -1473,6 +1476,54 @@
       "last_chk": 1794915300000,
       "exp_ms": 1794920400000,
       "fill_ms": 1794913800000,
+      "hit_tp1": false,
+      "locked_pct": 0.0
+    },
+    {
+      "symbol": "NVDAUSDT",
+      "side": "SHORT",
+      "entry": 156.33,
+      "confirm": 156.408165,
+      "stop": 158.99736000000001,
+      "tp1": 152.32896,
+      "tp2": 148.32792,
+      "be": 156.09550500000003,
+      "status": "PENDING",
+      "last_chk": 1794931200000,
+      "exp_ms": 1794938400000,
+      "fill_ms": 0,
+      "hit_tp1": false,
+      "locked_pct": 0.0
+    },
+    {
+      "symbol": "MUUSDT",
+      "side": "SHORT",
+      "entry": 718.02,
+      "confirm": 718.37901,
+      "stop": 737.35176,
+      "tp1": 689.0223599999999,
+      "tp2": 660.0247199999999,
+      "be": 716.9429700000001,
+      "status": "PENDING",
+      "last_chk": 1794931200000,
+      "exp_ms": 1794938400000,
+      "fill_ms": 0,
+      "hit_tp1": false,
+      "locked_pct": 0.0
+    },
+    {
+      "symbol": "KORUUSDT",
+      "side": "SHORT",
+      "entry": 6.557,
+      "confirm": 6.5602785,
+      "stop": 6.755484,
+      "tp1": 6.259274000000001,
+      "tp2": 5.961548000000001,
+      "be": 6.547164500000001,
+      "status": "PENDING",
+      "last_chk": 1794931200000,
+      "exp_ms": 1794938400000,
+      "fill_ms": 0,
       "hit_tp1": false,
       "locked_pct": 0.0
     }
