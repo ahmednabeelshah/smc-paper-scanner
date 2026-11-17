@@ -1,5 +1,5 @@
 {
-  "last_processed_ts": 1794700800000,
+  "last_processed_ts": 1794787200000,
   "active": [
     {
       "inst": "XRP-USDT-SWAP",
@@ -11,9 +11,11 @@
       "beta": 1.358,
       "entry_z": 3.02,
       "stop_dist": 0.04122,
-      "cum_pnl": -0.027299952987764137,
-      "days": 2
-    },
+      "cum_pnl": -0.01765061570329862,
+      "days": 3
+    }
+  ],
+  "closed": [
     {
       "inst": "DOGE-USDT-SWAP",
       "sym": "DOGEUSDT",
@@ -24,8 +26,11 @@
       "beta": 1.451,
       "entry_z": 2.82,
       "stop_dist": 0.04431,
-      "cum_pnl": 0.005649643021764208,
-      "days": 2
+      "cum_pnl": 0.010866950049750496,
+      "days": 3,
+      "exit_date": "2026-11-16",
+      "exit_reason": "MEAN REVERT (Z->0)",
+      "net_r": 0.162
     },
     {
       "inst": "ADA-USDT-SWAP",
@@ -37,9 +42,11 @@
       "beta": 1.503,
       "entry_z": 2.52,
       "stop_dist": 0.05774,
-      "cum_pnl": 0.00878277760039416,
-      "days": 2
+      "cum_pnl": 0.011628302874246063,
+      "days": 3,
+      "exit_date": "2026-11-16",
+      "exit_reason": "MEAN REVERT (Z->0)",
+      "net_r": 0.137
     }
-  ],
-  "closed": []
+  ]
 }
