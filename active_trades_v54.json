@@ -5,7 +5,8 @@
     "ETHUSDT_SHORT_1794672000000",
     "PEPEUSDT_SHORT_1794672000000",
     "XRPUSDT_SHORT_1794675600000",
-    "HYPEUSDT_SHORT_1794834000000"
+    "HYPEUSDT_SHORT_1794834000000",
+    "ETHUSDT_SHORT_1794913200000"
   ],
   "trades": [
     {
@@ -119,6 +120,25 @@
       "last_chk": 1794840000000,
       "exp_ms": 1794841200000,
       "fill_ms": 1794838800000,
+      "hit_tp1": false,
+      "locked_pct": 0.0
+    },
+    {
+      "symbol": "ETHUSDT",
+      "side": "SHORT",
+      "entry": 1811.19,
+      "confirm": 1812.095595,
+      "stop": 1837.0367399999998,
+      "tp1": 1772.4198900000006,
+      "tp2": 1733.6497800000009,
+      "be": 1808.4732150000002,
+      "trig_22": 1754.3271720000007,
+      "lock_10": 1785.3432600000003,
+      "trailed_22": false,
+      "status": "PENDING",
+      "last_chk": 1794913200000,
+      "exp_ms": 1794920400000,
+      "fill_ms": 0,
       "hit_tp1": false,
       "locked_pct": 0.0
     }
