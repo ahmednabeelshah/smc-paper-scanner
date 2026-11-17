@@ -1,5 +1,5 @@
 {
-  "updated_utc": "2026-11-17 23:15 UTC",
+  "updated_utc": "2026-11-17 23:20 UTC",
   "total_active": 2,
   "total_closed": 2,
   "models": {
@@ -125,7 +125,7 @@
   },
   "trades": [
     {
-      "Updated_UTC": "2026-11-17 23:15 UTC",
+      "Updated_UTC": "2026-11-17 23:20 UTC",
       "Model": "HEXA_V5 (AUTO)",
       "Status": "ACTIVE",
       "Symbol": "INJ-USDT-SWAP",
@@ -139,7 +139,7 @@
       "Traits": "mode=TREND; mult=1.0; stop_pct=0.19; votes=1"
     },
     {
-      "Updated_UTC": "2026-11-17 23:15 UTC",
+      "Updated_UTC": "2026-11-17 23:20 UTC",
       "Model": "RESIDUAL (AUTO)",
       "Status": "CLOSED",
       "Symbol": "DOGE-USDT-SWAP",
@@ -153,7 +153,7 @@
       "Traits": "beta=1.451; entry_z=2.82; exit_reason=MEAN REVERT (Z->0); stop_dist=0.044"
     },
     {
-      "Updated_UTC": "2026-11-17 23:15 UTC",
+      "Updated_UTC": "2026-11-17 23:20 UTC",
       "Model": "RESIDUAL (AUTO)",
       "Status": "CLOSED",
       "Symbol": "ADA-USDT-SWAP",
@@ -167,7 +167,7 @@
       "Traits": "beta=1.503; entry_z=2.52; exit_reason=MEAN REVERT (Z->0); stop_dist=0.058"
     },
     {
-      "Updated_UTC": "2026-11-17 23:15 UTC",
+      "Updated_UTC": "2026-11-17 23:20 UTC",
       "Model": "RESIDUAL (AUTO)",
       "Status": "ACTIVE",
       "Symbol": "XRP-USDT-SWAP",
