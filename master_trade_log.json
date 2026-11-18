@@ -1,9 +1,9 @@
 {
-  "updated_utc": "2026-11-18 09:41 UTC",
+  "updated_utc": "2026-11-18 09:46 UTC",
   "total_active": 4,
   "total_closed": 2,
   "models": {
-    "SMC-5M (AUTO)": {
+    "LEGACY (AUTO)": {
       "active_count": 0,
       "closed_count": 0,
       "win_rate_pct": 0.0,
@@ -24,14 +24,14 @@
       "realized_r": 0.0,
       "unrealized_r": 0.0
     },
-    "4H_RES_414 (AUTO)": {
+    "4H-RES-414 SNIPER (CORE)": {
       "active_count": 0,
       "closed_count": 0,
       "win_rate_pct": 0.0,
       "realized_r": 0.0,
       "unrealized_r": 0.0
     },
-    "ATR-CLV 1D (CORE)": {
+    "ATR_CLV (AUTO)": {
       "active_count": 0,
       "closed_count": 0,
       "win_rate_pct": 0.0,
@@ -45,7 +45,7 @@
       "realized_r": 0.0,
       "unrealized_r": 0.0
     },
-    "CALM-STREAK4 1D (CORE)": {
+    "CALM_STREAK4 (AUTO)": {
       "active_count": 0,
       "closed_count": 0,
       "win_rate_pct": 0.0,
@@ -66,28 +66,28 @@
       "realized_r": 0.0,
       "unrealized_r": -0.07
     },
-    "HVOL-RES 1D (CORE)": {
+    "HVOL_RES (AUTO)": {
       "active_count": 0,
       "closed_count": 0,
       "win_rate_pct": 0.0,
       "realized_r": 0.0,
       "unrealized_r": 0.0
     },
-    "HYBRID_609 (AUTO)": {
+    "HYBRID-609 1H (CORE)": {
       "active_count": 1,
       "closed_count": 0,
       "win_rate_pct": 0.0,
       "realized_r": 0.0,
       "unrealized_r": 0.0
     },
-    "MACD-TURN 1D (CORE)": {
+    "MACD (AUTO)": {
       "active_count": 0,
       "closed_count": 0,
       "win_rate_pct": 0.0,
       "realized_r": 0.0,
       "unrealized_r": 0.0
     },
-    "RES-CH30 1D (CORE)": {
+    "RES_CH30 (AUTO)": {
       "active_count": 0,
       "closed_count": 0,
       "win_rate_pct": 0.0,
@@ -115,7 +115,7 @@
       "realized_r": 0.0,
       "unrealized_r": 0.0
     },
-    "TSMOM (AUTO)": {
+    "TSMOM 1D UPG (CORE)": {
       "active_count": 0,
       "closed_count": 0,
       "win_rate_pct": 0.0,
@@ -129,7 +129,7 @@
       "realized_r": 0.0,
       "unrealized_r": 0.0
     },
-    "VOL-MACD 1D (CORE)": {
+    "VOL_MACD (AUTO)": {
       "active_count": 0,
       "closed_count": 0,
       "win_rate_pct": 0.0,
@@ -139,7 +139,7 @@
   },
   "trades": [
     {
-      "Updated_UTC": "2026-11-18 09:41 UTC",
+      "Updated_UTC": "2026-11-18 09:46 UTC",
       "Model": "CALM-RES 1D (CORE)",
       "Status": "ACTIVE",
       "Symbol": "SOLUSDT",
@@ -149,11 +149,11 @@
       "Entry_Price": 75.19,
       "Exit_Or_SL": "StopDist:1.85%",
       "Net_Or_Open_R": 0.0,
-      "Days_Held": 0,
-      "Traits": "beta=1.277; stop_pct=0.019"
+      "Days_Held": "0d",
+      "Traits": "beta=1.277"
     },
     {
-      "Updated_UTC": "2026-11-18 09:41 UTC",
+      "Updated_UTC": "2026-11-18 09:46 UTC",
       "Model": "HEXA_V5 (AUTO)",
       "Status": "ACTIVE",
       "Symbol": "INJ-USDT-SWAP",
@@ -163,25 +163,25 @@
       "Entry_Price": 6.808,
       "Exit_Or_SL": 7.797906,
       "Net_Or_Open_R": -0.07,
-      "Days_Held": 2,
-      "Traits": "mode=TREND; mult=1.0; stop_pct=0.19; votes=1"
+      "Days_Held": "2d",
+      "Traits": "mode=TREND; mult=1.0; votes=1"
     },
     {
-      "Updated_UTC": "2026-11-18 09:41 UTC",
-      "Model": "HYBRID_609 (AUTO)",
+      "Updated_UTC": "2026-11-18 09:46 UTC",
+      "Model": "HYBRID-609 1H (CORE)",
       "Status": "ACTIVE",
       "Symbol": "XRPUSDT",
       "Side": "SHORT",
-      "Entry_Date": "2026-11-18",
+      "Entry_Date": "2026-11-18 08:00",
       "Exit_Date": "",
       "Entry_Price": 0.9996,
       "Exit_Or_SL": 1.019614,
       "Net_Or_Open_R": 0.0,
-      "Days_Held": 0,
-      "Traits": "be=False; hours=0; stop_pct=0.02; tp=0.964"
+      "Days_Held": "0h",
+      "Traits": "be=False; tp=0.964"
     },
     {
-      "Updated_UTC": "2026-11-18 09:41 UTC",
+      "Updated_UTC": "2026-11-18 09:46 UTC",
       "Model": "RESIDUAL (AUTO)",
       "Status": "CLOSED",
       "Symbol": "DOGE-USDT-SWAP",
@@ -191,11 +191,11 @@
       "Entry_Price": 0.06449,
       "Exit_Or_SL": "",
       "Net_Or_Open_R": 0.162,
-      "Days_Held": 3,
-      "Traits": "beta=1.451; entry_z=2.82; exit_reason=MEAN REVERT (Z->0); stop_dist=0.044"
+      "Days_Held": "3d",
+      "Traits": "beta=1.451; entry_z=2.82; exit_reason=MEAN REVERT (Z->0)"
     },
     {
-      "Updated_UTC": "2026-11-18 09:41 UTC",
+      "Updated_UTC": "2026-11-18 09:46 UTC",
       "Model": "RESIDUAL (AUTO)",
       "Status": "CLOSED",
       "Symbol": "ADA-USDT-SWAP",
@@ -205,11 +205,11 @@
       "Entry_Price": 0.1684,
       "Exit_Or_SL": "",
       "Net_Or_Open_R": 0.137,
-      "Days_Held": 3,
-      "Traits": "beta=1.503; entry_z=2.52; exit_reason=MEAN REVERT (Z->0); stop_dist=0.058"
+      "Days_Held": "3d",
+      "Traits": "beta=1.503; entry_z=2.52; exit_reason=MEAN REVERT (Z->0)"
     },
     {
-      "Updated_UTC": "2026-11-18 09:41 UTC",
+      "Updated_UTC": "2026-11-18 09:46 UTC",
       "Model": "RESIDUAL (AUTO)",
       "Status": "ACTIVE",
       "Symbol": "XRP-USDT-SWAP",
@@ -219,8 +219,8 @@
       "Entry_Price": 1.0105,
       "Exit_Or_SL": "StopDist:4.12%",
       "Net_Or_Open_R": -0.428,
-      "Days_Held": 3,
-      "Traits": "beta=1.358; entry_z=3.02; stop_dist=0.041"
+      "Days_Held": "3d",
+      "Traits": "beta=1.358; entry_z=3.02"
     }
   ]
 }
