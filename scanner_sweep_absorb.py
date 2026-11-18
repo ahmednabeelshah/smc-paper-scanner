@@ -272,8 +272,11 @@ def persist_signals(new_signals: List[Dict]) -> List[Dict]:
         except Exception:
             existing = []
 
-    seen = {(r.get("model"), r.get("symbol"), r.get("closed_4h_bar_utc"), r.get("side")) for r in existing}
-    truly_new = []
+    seen = {
+    (r.get("model"), r.get("symbol"), r.get("closed_4h_bar_utc"), r.get("side"))
+    for r in existing
+    if isinstance(r, dict)
+}
     for sig in new_signals:
         key = (sig["model"], sig["symbol"], sig["closed_4h_bar_utc"], sig["side"])
         if key not in seen:
