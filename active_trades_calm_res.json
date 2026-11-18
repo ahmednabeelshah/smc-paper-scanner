@@ -1,4 +1,18 @@
 {
-  "active": [],
+  "active": [
+    {
+      "sym": "SOLUSDT",
+      "inst": "SOLUSDT",
+      "side": "SHORT",
+      "entry": 75.19,
+      "b_entry": 64947.35,
+      "beta": 1.277,
+      "stop_pct": 0.01852,
+      "days": 0,
+      "cum_pnl": 0.0,
+      "entry_ts": 1794873600000,
+      "last_ts": 1794873600000
+    }
+  ],
   "closed": []
 }

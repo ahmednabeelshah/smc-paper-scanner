@@ -1,0 +1,19 @@
+{
+  "active": [
+    {
+      "sym": "XRPUSDT",
+      "inst": "XRPUSDT",
+      "side": "SHORT",
+      "entry": 0.9996,
+      "sl": 1.019614,
+      "tp": 0.963574,
+      "stop_pct": 0.02002,
+      "hours": 0,
+      "be": false,
+      "entry_ts": 1794988800000,
+      "last_ts": 1794988800000
+    }
+  ],
+  "closed": [],
+  "last_ts": 1794988800000
+}
