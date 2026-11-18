@@ -5,15 +5,15 @@
       "inst": "XRPUSDT",
       "side": "SHORT",
       "entry": 0.9996,
-      "sl": 1.019614,
+      "sl": 0.9996,
       "tp": 0.963574,
       "stop_pct": 0.02002,
-      "hours": 0,
-      "be": false,
+      "hours": 1,
+      "be": true,
       "entry_ts": 1794988800000,
-      "last_ts": 1794988800000
+      "last_ts": 1795014000000
     }
   ],
   "closed": [],
-  "last_ts": 1794988800000
+  "last_ts": 1795014000000
 }
