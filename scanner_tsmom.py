@@ -1,60 +1,88 @@
-import json, os, time, requests
+import json
+import os
+import time
 from datetime import datetime, timezone
 from pathlib import Path
+import requests
 
-TOKEN = os.environ["TG_TOKEN"]
-CHAT_ID = os.environ["TG_CHAT_ID"]
-BASE = "https://www.okx.cab"
-TG_URL = f"https://telegram.org{TOKEN}/sendMessage"
+TOKEN = os.getenv("TG_TOKEN") or os.getenv("TELEGRAM_BOT_TOKEN", "")
+CHAT_ID = os.getenv("TG_CHAT_ID") or os.getenv("TELEGRAM_CHAT_ID", "")
+FAPI_BASES = ["https://fapi.binance.com", "https://fapi1.binance.com"]
+VISION_MIRROR = "https://data-api.binance.vision"
 STATE_FILE = Path("active_trades_tsmom.json")
-TAG = "📊 [TSMOM 5-YR SWING]"
+TAG = "[TSMOM 1D UPG]"
 
 COINS = [
-    "BTC-USDT-SWAP", "ETH-USDT-SWAP", "SOL-USDT-SWAP", "XRP-USDT-SWAP",
-    "DOGE-USDT-SWAP", "ADA-USDT-SWAP", "AVAX-USDT-SWAP", "LINK-USDT-SWAP",
-    "UNI-USDT-SWAP", "AAVE-USDT-SWAP"
+    "BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT",
+    "DOGEUSDT", "ADAUSDT", "AVAXUSDT", "LINKUSDT",
+    "UNIUSDT", "AAVEUSDT", "BNBUSDT", "DOTUSDT",
+    "BCHUSDT", "LTCUSDT", "ATOMUSDT", "NEARUSDT",
+    "APTUSDT", "ARBUSDT", "OPUSDT", "SUIUSDT",
+    "INJUSDT", "TIAUSDT", "FILUSDT", "ETCUSDT",
 ]
 
+MAX_SLOTS = 3
+MAX_HOLD_DAYS = 20
+INIT_SL_ATR = 2.5
+TRAIL_ATR = 2.0
+MIN_VOL_REL = 1.1
+MIN_STOP_PCT = 0.015
+FEE_ROUND_TRIP = 0.0015
+
+
 def get_json(path, params=None):
-    for a in range(4):
+    for base in FAPI_BASES:
         try:
-            r = requests.get(BASE + path, params=params, timeout=15)
+            r = requests.get(base + path, params=params, timeout=10)
+            if r.status_code == 451:
+                break
             r.raise_for_status()
             return r.json()
         except Exception:
-            if a == 3:
+            continue
+
+    v_path = path.replace("/fapi/v1/time", "/api/v3/time").replace("/fapi/v1/klines", "/api/v3/klines")
+    for a in range(3):
+        try:
+            r = requests.get(VISION_MIRROR + v_path, params=params, timeout=15)
+            r.raise_for_status()
+            return r.json()
+        except Exception:
+            if a == 2:
                 raise
             time.sleep(2 ** a)
 
-def send_tg(msg): return None  # SILENT_JSON_MODE
-def _old_tg(msg):
-    print("\n" + "=" * 50 + "\n" + msg + "\n" + "=" * 50)
+
+def send_tg(msg):
+    if not TOKEN or not CHAT_ID:
+        print(msg)
+        return
     try:
-        requests.post(TG_URL, json={"chat_id": CHAT_ID, "text": msg}, timeout=15)
-    except Exception as e:
-        print("TG warn:", e)
+        requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage", json={"chat_id": CHAT_ID, "text": f"{TAG}\n{msg}"}, timeout=10)
+    except Exception:
+        pass
+
 
 def ema_series(vals, p):
     a = 2.0 / (p + 1.0)
-    out = []
-    v = vals.__getitem__(0)
+    out, v = [], vals[0]
     for x in vals:
         v = a * x + (1.0 - a) * v
         out.append(v)
     return out
 
+
 def atr_last(hi, lo, cl, p=14):
-    trs = []
-    for i in range(1, len(cl)):
-        tr = max(hi[i] - lo[i], abs(hi[i] - cl[i-1]), abs(lo[i] - cl[i-1]))
-        trs.append(tr)
+    trs = [max(hi[i] - lo[i], abs(hi[i] - cl[i - 1]), abs(lo[i] - cl[i - 1])) for i in range(1, len(cl))]
     return sum(trs[-p:]) / float(p)
 
-def closed_daily(inst_id, limit=80):
-    raw = get_json("/api/v5/market/candles", {"instId": inst_id, "bar": "1Dutc", "limit": limit}).get("data", [])
-    closed = [r for r in raw if r.__getitem__(8) == "1"]
-    closed.reverse()
-    return closed
+
+def closed_klines(sym, interval="1d", limit=80, srv_ms=None):
+    if srv_ms is None:
+        srv_ms = int(get_json("/fapi/v1/time")["serverTime"])
+    raw = get_json("/fapi/v1/klines", {"symbol": sym, "interval": interval, "limit": limit})
+    return [r for r in raw if int(r[6]) < srv_ms]
+
 
 def load_state():
     if STATE_FILE.exists():
@@ -62,145 +90,139 @@ def load_state():
             return json.loads(STATE_FILE.read_text())
         except Exception:
             pass
-    return {"seen": [], "trades": []}
+    return {"seen": [], "active": [], "closed": []}
+
 
 def save_state(st):
-    st["seen"] = st["seen"][-200:]
+    st["seen"] = st.get("seen", [])[-300:]
     STATE_FILE.write_text(json.dumps(st, indent=2))
+
+
 def manage_open_tsmom(st, srv_ms):
-    for tr in st["trades"]:
-        if tr["status"] != "ACTIVE":
-            continue
-        inst = tr["inst"]
-        sym = tr["symbol"]
-        kd = closed_daily(inst, 30)
+    still = []
+    for tr in st.get("active", []):
+        sym = tr["sym"]
+        kd = closed_klines(sym, "1d", 30, srv_ms)
         if len(kd) < 20:
+            still.append(tr)
             continue
-        hi = [float(x.__getitem__(2)) for x in kd]
-        lo = [float(x.__getitem__(3)) for x in kd]
-        cl = [float(x.__getitem__(4)) for x in kd]
+
+        latest_ts = int(kd[-1][0])
+        if latest_ts <= tr.get("last_ts", tr["entry_ts"]):
+            still.append(tr)
+            continue
+
+        tr["last_ts"] = latest_ts
+        tr["days"] = tr.get("days", 0) + 1
+        hi = [float(x[2]) for x in kd]
+        lo = [float(x[3]) for x in kd]
+        cl = [float(x[4]) for x in kd]
         atr14 = atr_last(hi, lo, cl, 14)
 
-        # Check intraday 1H highs/lows since last_chk for exact Chandelier trailing stop
-        k1 = get_json("/api/v5/market/candles", {"instId": inst, "bar": "1H", "limit": 48}).get("data", [])
-        k1.reverse()
-        for bar in k1:
-            b_hi = float(bar.__getitem__(2))
-            b_lo = float(bar.__getitem__(3))
-            b_close_t = int(bar.__getitem__(0)) + 3600000
-            if bar.__getitem__(8) != "1" or b_close_t <= tr["last_chk"]:
-                continue
-            tr["last_chk"] = b_close_t
-            entry, sl, risk = tr["entry"], tr["stop"], tr["risk"]
+        b_hi, b_lo, b_cl = hi[-1], lo[-1], cl[-1]
+        entry, sl, risk = tr["entry"], tr["stop"], tr["risk"]
+        exit_px, reason = None, None
 
-            if tr["side"] == "LONG":
-                if b_lo <= sl:
-                    pnl_pct = ((sl - entry) / entry * 100.0) - 0.14
-                    r_mult = pnl_pct / ((risk / entry) * 100.0)
-                    tr["status"] = "CLOSED"
-                    res = "WIN" if r_mult > 0 else "LOSS"
-                    send_tg(f"{TAG}\nCLOSED [{res}]: {sym} LONG @ {sl:.6g}\nNet: {pnl_pct:+.2f}% ({r_mult:+.2f}R)")
-                    break
-                if b_hi > tr["best"]:
-                    tr["best"] = b_hi
-                    new_sl = max(sl, tr["best"] - 2.5 * atr14)
-                    if new_sl > sl * 1.002:
-                        tr["stop"] = new_sl
-                        send_tg(f"{TAG}\nATR TRAIL UPDATED: {sym} LONG\nPeak: {tr['best']:.6g} -> New SL: {new_sl:.6g}")
+        if tr["side"] == "LONG":
+            if b_lo <= sl:
+                exit_px, reason = sl, "ATR_TRAIL_SL"
             else:
-                if b_hi >= sl:
-                    pnl_pct = ((entry - sl) / entry * 100.0) - 0.14
-                    r_mult = pnl_pct / ((risk / entry) * 100.0)
-                    tr["status"] = "CLOSED"
-                    res = "WIN" if r_mult > 0 else "LOSS"
-                    send_tg(f"{TAG}\nCLOSED [{res}]: {sym} SHORT @ {sl:.6g}\nNet: {pnl_pct:+.2f}% ({r_mult:+.2f}R)")
-                    break
-                if b_lo < tr["best"]:
-                    tr["best"] = b_lo
-                    new_sl = min(sl, tr["best"] + 2.5 * atr14)
-                    if new_sl < sl * 0.998:
-                        tr["stop"] = new_sl
-                        send_tg(f"{TAG}\nATR TRAIL UPDATED: {sym} SHORT\nLow: {tr['best']:.6g} -> New SL: {new_sl:.6g}")
+                tr["best"] = max(tr["best"], b_hi)
+                tr["stop"] = max(sl, tr["best"] - TRAIL_ATR * atr14)
+        else:
+            if b_hi >= sl:
+                exit_px, reason = sl, "ATR_TRAIL_SL"
+            else:
+                tr["best"] = min(tr["best"], b_lo)
+                tr["stop"] = min(sl, tr["best"] + TRAIL_ATR * atr14)
+
+        if exit_px is None and tr["days"] >= MAX_HOLD_DAYS:
+            exit_px, reason = b_cl, "20D_TIME_EXIT"
+
+        if exit_px is not None:
+            sgn = 1.0 if tr["side"] == "LONG" else -1.0
+            net_r = round(((sgn * (exit_px - entry) / entry) - FEE_ROUND_TRIP) / (risk / entry), 3)
+            tr.update({"exit_ts": latest_ts, "exit_price": exit_px, "net_r": net_r, "exit_reason": reason})
+            st.setdefault("closed", []).append(tr)
+            send_tg(f"CLOSED [{reason}]: {sym} {tr['side']} @ {exit_px:.6g} | Net: {net_r:+.2f}R")
+        else:
+            still.append(tr)
+    st["active"] = still
+
 
 def run_once():
     st = load_state()
-    srv_ms = int(get_json("/api/v5/public/time")["data"].__getitem__(0)["ts"])
+    srv_ms = int(get_json("/fapi/v1/time")["serverTime"])
     manage_open_tsmom(st, srv_ms)
 
-    dt_utc = datetime.fromtimestamp(srv_ms / 1000, timezone.utc)
-    now_str = dt_utc.strftime("%Y-%m-%dT%H:%M:%SZ")
-
-    open_slots = sum(1 for x in st["trades"] if x["status"] == "ACTIVE")
-    if open_slots >= 3:
-        print(f"[{now_str}] [TSMOM] Max 3 swing slots full ({open_slots}/3).")
+    if len(st["active"]) >= MAX_SLOTS:
         save_state(st)
         return
 
-    btc_d = closed_daily("BTC-USDT-SWAP", 70)
+    btc_d = closed_klines("BTCUSDT", "1d", 70, srv_ms)
     if len(btc_d) < 55:
         save_state(st)
         return
-    c_btc = [float(x.__getitem__(4)) for x in btc_d]
+
+    c_btc = [float(x[4]) for x in btc_d]
     e50_btc = ema_series(c_btc, 50)[-1]
     btc_bull = c_btc[-1] > e50_btc
-    btc_bear = c_btc[-1] < e50_btc
-    d_close_ms = int(btc_d[-1].__getitem__(0)) + 86400000
-    print(f"[{now_str}] [TSMOM] Daily Regime: BTC={'BULL' if btc_bull else 'BEAR'} | Slots={open_slots}/3")
+    d_ts = int(btc_d[-1][0])
 
-    for inst in COINS:
-        if inst == "BTC-USDT-SWAP":
+    cands = []
+    for sym in COINS:
+        if any(x["sym"] == sym for x in st["active"]):
             continue
-        if sum(1 for x in st["trades"] if x["status"] == "ACTIVE") >= 3:
-            break
-        sym = inst.replace("-USDT-SWAP", "USDT")
-        if any(x["symbol"] == sym and x["status"] == "ACTIVE" for x in st["trades"]):
-            continue
-        uid = f"{sym}_TSMOM_{d_close_ms}"
+        uid = f"{sym}_TSMOM_{d_ts}"
         if uid in st["seen"]:
             continue
 
-        try:
-            kd = closed_daily(inst, 70)
-            if len(kd) < 55:
-                continue
-            hi = [float(x.__getitem__(2)) for x in kd]
-            lo = [float(x.__getitem__(3)) for x in kd]
-            cl = [float(x.__getitem__(4)) for x in kd]
-            e20 = ema_series(cl, 20)
-            e50 = ema_series(cl, 50)
-            atr14 = atr_last(hi, lo, cl, 14)
+        kd = closed_klines(sym, "1d", 70, srv_ms)
+        if len(kd) < 55 or int(kd[-1][0]) != d_ts:
+            continue
 
-            side = None
-            if btc_bull and cl[-1] > e20[-1] and e20[-1] > e50[-1] and cl[-2] <= e20[-2]:
-                side = "LONG"
-                entry = cl[-1]
-                risk = 2.5 * atr14
-                sl = entry - risk
-            elif btc_bear and cl[-1] < e20[-1] and e20[-1] < e50[-1] and cl[-2] >= e20[-2]:
-                side = "SHORT"
-                entry = cl[-1]
-                risk = 2.5 * atr14
-                sl = entry + risk
+        hi = [float(x[2]) for x in kd]
+        lo = [float(x[3]) for x in kd]
+        cl = [float(x[4]) for x in kd]
+        vo = [float(x[5]) for x in kd]
 
-            if side is None or risk <= 0:
-                continue
+        v_avg20 = sum(vo[-20:]) / 20.0
+        vrel = (vo[-1] / v_avg20) if v_avg20 > 0 else 0.0
+        if vrel < MIN_VOL_REL:
+            continue
 
-            st["seen"].append(uid)
-            st["trades"].append({
-                "symbol": sym, "inst": inst, "side": side,
-                "entry": entry, "stop": sl, "risk": risk, "best": entry,
-                "status": "ACTIVE", "last_chk": d_close_ms
-            })
-            sl_pct = (risk / entry) * 100.0
-            send_tg(
-                f"{TAG}\nNEW SWING SIGNAL [{side}]: {sym}\n"
-                f"Entry: {entry:.6g} | 2.5x ATR SL: {sl:.6g} ({sl_pct:.2f}%)\n"
-                f"Exit: Dynamic 2.5x ATR Trailing Stop (Max 3 Slots)"
-            )
-        except Exception as e:
-            print(f"[TSMOM] Skip {sym}: {e}")
+        e20 = ema_series(cl, 20)
+        e50 = ema_series(cl, 50)
+        atr14 = atr_last(hi, lo, cl, 14)
+        entry = cl[-1]
+        risk = INIT_SL_ATR * atr14
+        if (risk / entry) < MIN_STOP_PCT:
+            continue
+
+        side = None
+        if btc_bull and cl[-1] > e20[-1] > e50[-1] and cl[-2] <= e20[-2]:
+            side = "LONG"
+        elif (not btc_bull) and cl[-1] < e20[-1] < e50[-1] and cl[-2] >= e20[-2]:
+            side = "SHORT"
+
+        if side:
+            cands.append((vrel, uid, sym, side, entry, risk))
+
+    for vrel, uid, sym, side, entry, risk in sorted(cands, reverse=True)[:MAX_SLOTS - len(st["active"])]:
+        sl = entry - risk if side == "LONG" else entry + risk
+        st["seen"].append(uid)
+        st["active"].append({
+            "sym": sym, "inst": sym, "side": side,
+            "entry": entry, "stop": sl, "sl": sl, "risk": risk,
+            "stop_pct": round(risk / entry, 5), "best": entry,
+            "days": 0, "entry_ts": d_ts, "last_ts": d_ts, "vol_rel": round(vrel, 2),
+        })
+        send_tg(f"NEW [{side}]: {sym} @ {entry:.6g} | SL={sl:.6g} | VolRel={vrel:.2f}x")
 
     save_state(st)
+    print(f"{TAG} Done. Active={len(st['active'])}/{MAX_SLOTS}")
+
 
 if __name__ == "__main__":
     run_once()
+    
