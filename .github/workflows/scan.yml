@@ -25,26 +25,34 @@ jobs:
       - name: Install dependencies
         run: pip install requests pandas numpy
 
-      - name: Run 4-Model Binance Suite & Master Logger
+      - name: Run Binance Suite & Master Logger
         env:
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          TG_BOT_TOKEN: ${{ secrets.TG_TOKEN }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TG_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
           TELEGRAM_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
         run: |
-          python scanner_calm_res.py
-          python scanner_tsmom.py
-          python scanner_4h_res_414.py
-          python scanner_hybrid_609.py
-          python master_trade_logger.py
-          python scanner_weekly_report.py
+          for f in scanner_*.py; do
+            [ -e "$f" ] || continue
+            [ "$f" = "scanner_weekly_report.py" ] && continue
+            echo "Running $f..."
+            python "$f"
+          done
+
+          if [ -f "paper_scanner_binance_bo1h_v34h.py" ]; then
+            echo "Running paper_scanner_binance_bo1h_v34h.py --once..."
+            python paper_scanner_binance_bo1h_v34h.py --once
+          fi
+
+          [ -f "master_trade_logger.py" ] && python master_trade_logger.py
+          [ -f "scanner_weekly_report.py" ] && python scanner_weekly_report.py
 
       - name: Commit updated state & logs
         run: |
           git config user.name "scanner-bot"
           git config user.email "scanner@noreply.local"
-          git add active_trades_*.json master_trade_log.csv master_trade_log.json state_weekly_report.json || true
+          git add -A '*.json' '*.csv' || true
           git commit -m "update state" || exit 0
           git pull --rebase -X theirs
           git push
-          
