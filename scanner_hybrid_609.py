@@ -1,3 +1,4 @@
+import argparse
 import json
 import os
 import time
@@ -14,6 +15,7 @@ TAG = "[HYBRID_609 1H]"
 MAJORS = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT"]
 MAX_SLOTS = 3
 MAX_HOLD_HOURS = 24
+MAX_ALERTED_KEYS = 1000
 
 
 def get_json(path, params=None):
@@ -39,14 +41,29 @@ def get_json(path, params=None):
             time.sleep(2 ** a)
 
 
-def send_tg(msg):
+def send_tg_raw(msg):
     if not TOKEN or not CHAT_ID:
-        print(msg)
+        print(f"{TAG} {msg}")
         return
     try:
-        requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage", json={"chat_id": CHAT_ID, "text": f"{TAG}\n{msg}"}, timeout=10)
+        requests.post(
+            f"https://api.telegram.org/bot{TOKEN}/sendMessage",
+            json={"chat_id": CHAT_ID, "text": f"{TAG}\n{msg}"},
+            timeout=10,
+        )
     except Exception:
         pass
+
+
+def send_tg_once(state, alert_key, msg):
+    alerted = state.get("alerted_keys")
+    if not isinstance(alerted, list):
+        alerted = []
+    if alert_key in alerted:
+        return
+    send_tg_raw(msg)
+    alerted.append(alert_key)
+    state["alerted_keys"] = alerted[-MAX_ALERTED_KEYS:]
 
 
 def get_klines(symbol, interval="1h", limit=260, srv_ms=None):
@@ -61,9 +78,25 @@ def get_klines(symbol, interval="1h", limit=260, srv_ms=None):
     return df.set_index("ts")
 
 
+def load_hybrid_state():
+    if os.path.exists(STATE_FILE):
+        try:
+            st = json.load(open(STATE_FILE, "r", encoding="utf-8"))
+            if isinstance(st, dict):
+                st.setdefault("active", [])
+                st.setdefault("closed", [])
+                st.setdefault("last_ts", 0)
+                if not isinstance(st.get("alerted_keys"), list):
+                    st["alerted_keys"] = []
+                return st
+        except Exception:
+            pass
+    return {"active": [], "closed": [], "last_ts": 0, "alerted_keys": []}
+
+
 def run_hybrid_609():
     srv_ms = int(get_json("/fapi/v1/time")["serverTime"])
-    st = json.load(open(STATE_FILE)) if os.path.exists(STATE_FILE) else {"active": [], "closed": [], "last_ts": 0}
+    st = load_hybrid_state()
     btc_df = get_klines("BTCUSDT", "1h", 260, srv_ms)
     if len(btc_df) < 210:
         return
@@ -77,7 +110,8 @@ def run_hybrid_609():
             still.append(tr)
             continue
 
-        tr["last_ts"] = int(df.index[-1])
+        bar_ts = int(df.index[-1])
+        tr["last_ts"] = bar_ts
         tr["hours"] = tr.get("hours", 0) + 1
         r = df.iloc[-1]
         ep, sl, tp, sp = tr["entry"], tr["sl"], tr["tp"], tr["stop_pct"]
@@ -104,9 +138,14 @@ def run_hybrid_609():
 
         if exit_px is not None:
             nr = round(((sgn * (exit_px - ep) / ep) - 0.0015) / sp, 3)
-            tr.update({"exit_ts": lts, "exit_price": exit_px, "net_r": nr, "exit_reason": reason})
+            tr.update({"exit_ts": bar_ts, "exit_price": exit_px, "net_r": nr, "exit_reason": reason})
             st.setdefault("closed", []).append(tr)
-            send_tg(f"CLOSED [{reason}]: {tr['sym']} {tr['side']} @ {exit_px:.6g} | Net: {nr:+.2f}R")
+            alert_key = f"HYBRID_609:{tr['sym']}:{tr['side']}:CLOSE:{bar_ts}:{round(float(exit_px), 6)}"
+            send_tg_once(
+                st,
+                alert_key,
+                f"CLOSED [{reason}]: {tr['sym']} {tr['side']} @ {exit_px:.6g} | Net: {nr:+.2f}R",
+            )
         else:
             still.append(tr)
 
@@ -148,13 +187,21 @@ def run_hybrid_609():
                     "sl": sl, "tp": tp, "stop_pct": round(sp, 5),
                     "hours": 0, "be": False, "entry_ts": lts, "last_ts": lts,
                 })
-                send_tg(f"NEW [{side}]: {sym} @ {ep:.6g} | SL={sl} | TP={tp}")
+                alert_key = f"HYBRID_609:{sym}:{side}:ENTRY:{lts}:{round(ep, 6)}"
+                send_tg_once(
+                    st,
+                    alert_key,
+                    f"NEW [{side}]: {sym} @ {ep:.6g} | SL={sl} | TP={tp}",
+                )
 
     st["last_ts"] = lts
-    json.dump(st, open(STATE_FILE, "w"), indent=2)
+    json.dump(st, open(STATE_FILE, "w", encoding="utf-8"), indent=2)
     print(f"{TAG} Done. Active={len(st['active'])}/{MAX_SLOTS}")
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Hybrid 609 1H Paper Scanner")
+    parser.add_argument("--once", action="store_true", help="Run a single scan pass")
+    parser.parse_args()
     run_hybrid_609()
-    
+            
