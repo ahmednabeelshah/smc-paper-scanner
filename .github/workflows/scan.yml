@@ -1,4 +1,4 @@
-name: SMC Paper Scanner
+name: SMC Hourly Scanner
 
 on:
   schedule:
@@ -9,12 +9,13 @@ permissions:
   contents: write
 
 concurrency:
-  group: scanner-lock
-  cancel-in-progress: false
+  group: scanner-1h-lock
+  cancel-in-progress: true
 
 jobs:
-  scan:
+  scan_1h:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
 
@@ -25,7 +26,7 @@ jobs:
       - name: Install dependencies
         run: pip install requests pandas numpy
 
-      - name: Run Binance Suite & Master Logger
+      - name: Run 1h Scanner
         env:
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
           TG_BOT_TOKEN: ${{ secrets.TG_TOKEN }}
@@ -33,26 +34,15 @@ jobs:
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
           TELEGRAM_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
         run: |
-          for f in scanner_*.py; do
-            [ -e "$f" ] || continue
-            [ "$f" = "scanner_weekly_report.py" ] && continue
-            echo "Running $f..."
-            python "$f"
-          done
+          python scanner_hourly.py --once
 
-          if [ -f "paper_scanner_binance_bo1h_v34h.py" ]; then
-            echo "Running paper_scanner_binance_bo1h_v34h.py --once..."
-            python paper_scanner_binance_bo1h_v34h.py --once
-          fi
-
-          [ -f "master_trade_logger.py" ] && python master_trade_logger.py
-          [ -f "scanner_weekly_report.py" ] && python scanner_weekly_report.py
-
-      - name: Commit updated state & logs
+      - name: Commit 1h state
         run: |
           git config user.name "scanner-bot"
           git config user.email "scanner@noreply.local"
-          git add -A '*.json' '*.csv' || true
-          git commit -m "update state" || exit 0
+          git add -f active_trades_1h.json 2>/dev/null || true
+          git diff --cached --quiet && exit 0
+          git commit -m "update 1h state"
           git pull --rebase -X theirs
           git push
+          
