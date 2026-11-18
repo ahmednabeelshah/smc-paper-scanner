@@ -1,5 +1,5 @@
 {
-  "last_processed_1h": "2026-11-18T19:00:00+00:00",
+  "last_processed_1h": "2026-11-18T20:00:00+00:00",
   "active": {
     "BO1H:DOTUSDT": {
       "sleeve": "BO1H",
@@ -11,7 +11,7 @@
       "tp": 0.6727138133121503,
       "tp_r": 2.8,
       "stage": 0,
-      "hours": 3,
+      "hours": 4,
       "max_hours": 16,
       "trail_step": true,
       "opened_at": "2026-11-18T17:00:00+00:00"
@@ -26,7 +26,7 @@
       "tp": 41.16887813703681,
       "tp_r": 2.8,
       "stage": 0,
-      "hours": 3,
+      "hours": 4,
       "max_hours": 16,
       "trail_step": true,
       "opened_at": "2026-11-18T17:00:00+00:00"
@@ -41,7 +41,7 @@
       "tp": 0.11860266893701592,
       "tp_r": 2.8,
       "stage": 0,
-      "hours": 3,
+      "hours": 4,
       "max_hours": 16,
       "trail_step": true,
       "opened_at": "2026-11-18T17:00:00+00:00"
