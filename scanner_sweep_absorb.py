@@ -11,7 +11,7 @@ import json
 import os
 import zipfile
 from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Optional
+from typing import Dict, List
 import numpy as np
 import pandas as pd
 import requests
@@ -268,15 +268,23 @@ def persist_signals(new_signals: List[Dict]) -> List[Dict]:
     if os.path.exists(LOG_JSON):
         try:
             with open(LOG_JSON, "r", encoding="utf-8") as f:
-                existing = json.load(f)
+                loaded = json.load(f)
+            if isinstance(loaded, list):
+                existing = [r for r in loaded if isinstance(r, dict)]
+            elif isinstance(loaded, dict):
+                for k in ("signals", "trades", "records", "data"):
+                    if isinstance(loaded.get(k), list):
+                        existing = [r for r in loaded[k] if isinstance(r, dict)]
+                        break
         except Exception:
             existing = []
 
     seen = {
-    (r.get("model"), r.get("symbol"), r.get("closed_4h_bar_utc"), r.get("side"))
-    for r in existing
-    if isinstance(r, dict)
-}
+        (r.get("model"), r.get("symbol"), r.get("closed_4h_bar_utc"), r.get("side"))
+        for r in existing
+    }
+    truly_new: List[Dict] = []
+
     for sig in new_signals:
         key = (sig["model"], sig["symbol"], sig["closed_4h_bar_utc"], sig["side"])
         if key not in seen:
@@ -288,9 +296,13 @@ def persist_signals(new_signals: List[Dict]) -> List[Dict]:
         json.dump(existing, f, indent=2)
 
     if existing:
-        fieldnames = list(existing[0].keys())
+        fieldnames: List[str] = []
+        for row in existing:
+            for col in row.keys():
+                if col not in fieldnames:
+                    fieldnames.append(col)
         with open(LOG_CSV, "w", newline="", encoding="utf-8") as f:
-            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
             writer.writeheader()
             writer.writerows(existing)
 
