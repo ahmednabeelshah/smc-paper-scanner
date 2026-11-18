@@ -92,7 +92,9 @@
     "PEPEUSDT_SHORT_1794934800000",
     "NEARUSDT_SHORT_1794934800000",
     "PUMPUSDT_SHORT_1794934800000",
-    "QQQUSDT_SHORT_1794934800000"
+    "QQQUSDT_SHORT_1794934800000",
+    "XAUUSDT_SHORT_1794967200000",
+    "XAGUSDT_SHORT_1794967200000"
   ],
   "trades": [
     {
@@ -1545,7 +1547,7 @@
       "tp2": 1679.5059600000004,
       "be": 1794.1846800000003,
       "status": "ACTIVE",
-      "last_chk": 1794966900000,
+      "last_chk": 1794967200000,
       "exp_ms": 1794942000000,
       "fill_ms": 1794939900000,
       "hit_tp1": false,
@@ -1660,6 +1662,38 @@
       "last_chk": 1794956700000,
       "exp_ms": 1794942000000,
       "fill_ms": 1794936000000,
+      "hit_tp1": false,
+      "locked_pct": 0.0
+    },
+    {
+      "symbol": "XAUUSDT",
+      "side": "SHORT",
+      "entry": 3836.8,
+      "confirm": 3838.7183999999997,
+      "stop": 3871.8282,
+      "tp1": 3784.2577000000006,
+      "tp2": 3731.715400000001,
+      "be": 3831.0448000000006,
+      "status": "PENDING",
+      "last_chk": 1794967200000,
+      "exp_ms": 1794974400000,
+      "fill_ms": 0,
+      "hit_tp1": false,
+      "locked_pct": 0.0
+    },
+    {
+      "symbol": "XAGUSDT",
+      "side": "SHORT",
+      "entry": 47.12,
+      "confirm": 47.143559999999994,
+      "stop": 47.80542,
+      "tp1": 46.09187,
+      "tp2": 45.063739999999996,
+      "be": 47.04932,
+      "status": "PENDING",
+      "last_chk": 1794967200000,
+      "exp_ms": 1794974400000,
+      "fill_ms": 0,
       "hit_tp1": false,
       "locked_pct": 0.0
     }
