@@ -22,6 +22,7 @@ SF = "active_trades_calm_res.json"
 TAG = "[CALM-RES 1D]"
 MAX_SLOTS = 3
 MAX_HOLD_DAYS = 5
+TP_R = 0.80
 
 
 def get_json(path, params=None):
@@ -89,6 +90,13 @@ def fetch_1d(sym, limit=120, srv_ms=None):
     return df
 
 
+def calc_sl_tp(side, entry, stop_pct, tp_r=TP_R):
+    tp_pct = stop_pct * tp_r
+    if side == "SHORT":
+        return entry * (1.0 + stop_pct), entry * (1.0 - tp_pct)
+    return entry * (1.0 - stop_pct), entry * (1.0 + tp_pct)
+
+
 def main():
     srv_ms = int(get_json("/fapi/v1/time")["serverTime"])
     st = load_st(SF)
@@ -150,11 +158,14 @@ def main():
                     cands.append((abs(z1), "SHORT" if z1 > 0 else "LONG", sym, float(df["c"].iloc[-1]), bv, sp))
 
         for za, side, sym, cp, bv, sp in sorted(cands, reverse=True)[:MAX_SLOTS - len(st["active"])]:
+            sl_px, tp_px = calc_sl_tp(side, cp, sp, TP_R)
             st["active"].append({
                 "sym": sym,
                 "inst": sym,
                 "side": side,
                 "entry": cp,
+                "sl": round(sl_px, 6),
+                "tp": round(tp_px, 6),
                 "b_entry": bc,
                 "beta": round(bv, 4),
                 "stop_pct": round(sp, 5),
@@ -163,7 +174,10 @@ def main():
                 "entry_ts": lts,
                 "last_ts": lts,
             })
-            send_tg(f"{TAG} NEW {side} {sym} @ {cp:.4f} | Stop: {sp*100:.2f}% | Beta={bv:.2f} | |Z1|={za:.2f}")
+            send_tg(
+                f"{TAG}\nNEW [{side}]: {sym} @ {cp:.4f} | SL={sl_px:.4f} | TP={tp_px:.4f} "
+                f"(Stop: {sp*100:.2f}%, {TP_R:.2f}R | Beta={bv:.2f} | |Z1|={za:.2f})"
+            )
 
     save_st(SF, st)
     print(f"{TAG} Scan complete. Active={len(st['active'])}/{MAX_SLOTS}")
@@ -171,3 +185,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
