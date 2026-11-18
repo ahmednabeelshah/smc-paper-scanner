@@ -42,6 +42,7 @@ MIN_STOP_PCT = 0.015
 BASE_FRICTION = 0.0015
 POLL_INTERVAL_SEC = 30
 MAX_WORKERS = 8
+MAX_ALERTED_KEYS = 1000
 
 TG_BOT_TOKEN = (
     os.getenv("TG_BOT_TOKEN")
@@ -64,7 +65,7 @@ KLINE_COLS = [
 HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; Bo1hV34hScanner/1.1)"}
 
 
-def send_telegram(msg: str) -> None:
+def send_telegram_raw(msg: str) -> None:
     print(f"[{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}] {msg}")
     if not TG_BOT_TOKEN or not TG_CHAT_ID:
         return
@@ -77,6 +78,17 @@ def send_telegram(msg: str) -> None:
         except Exception:
             pass
         time.sleep(1.0 * (attempt + 1))
+
+
+def send_telegram_once(state: dict, alert_key: str, msg: str) -> None:
+    alerted = state.get("alerted_keys")
+    if not isinstance(alerted, list):
+        alerted = []
+    if alert_key in alerted:
+        return
+    send_telegram_raw(msg)
+    alerted.append(alert_key)
+    state["alerted_keys"] = alerted[-MAX_ALERTED_KEYS:]
 
 
 def fetch_klines_1h(symbol: str, limit: int = 260) -> Optional[pd.DataFrame]:
@@ -154,13 +166,15 @@ def load_state() -> dict:
             data = json.loads(STATE_FILE.read_text(encoding="utf-8"))
             if isinstance(data, dict):
                 active = data.get("active")
+                alerted = data.get("alerted_keys")
                 return {
                     "last_processed_1h": data.get("last_processed_1h"),
                     "active": active if isinstance(active, dict) else {},
+                    "alerted_keys": alerted if isinstance(alerted, list) else [],
                 }
         except Exception:
             pass
-    return {"last_processed_1h": None, "active": {}}
+    return {"last_processed_1h": None, "active": {}, "alerted_keys": []}
 
 
 def save_state(state: dict) -> None:
@@ -357,9 +371,12 @@ def process_bar_cycle(state: dict) -> bool:
                 "reason": exit_reason,
                 "net_r": round(net_r, 4),
             })
-            send_telegram(
+            alert_key = f"BO1H_V34H:{p['sleeve']}:{sym}:{side}:EXIT:{eval_iso}:{round(exit_px, 6)}"
+            send_telegram_once(
+                state,
+                alert_key,
                 f"PAPER EXIT [{p['sleeve']}] {sym} {side} | Reason: {exit_reason} | "
-                f"Entry: {p['entry']:.4f} -> Exit: {exit_px:.4f} | Net: {net_r:+.2f}R"
+                f"Entry: {p['entry']:.4f} -> Exit: {exit_px:.4f} | Net: {net_r:+.2f}R",
             )
             continue
 
@@ -411,10 +428,13 @@ def process_bar_cycle(state: dict) -> bool:
             }
             active_syms.add(sig["symbol"])
             side = "LONG" if sig["direction"] == 1 else "SHORT"
-            send_telegram(
+            alert_key = f"BO1H_V34H:{sig['sleeve']}:{sig['symbol']}:{side}:ENTRY:{eval_iso}:{round(opx, 6)}"
+            send_telegram_once(
+                state,
+                alert_key,
                 f"PAPER ENTRY [{sig['sleeve']}] {sig['symbol']} {side} @ {opx:.4f} | "
                 f"SL: {sl_px:.4f} ({spct*100:.2f}%) | TP: {tp_px:.4f} ({sig['tp_r']}R) | "
-                f"Slots: {len(active)}/{MAX_SLOTS}"
+                f"Slots: {len(active)}/{MAX_SLOTS}",
             )
 
     state["last_processed_1h"] = eval_iso
@@ -434,7 +454,7 @@ def main() -> None:
         process_bar_cycle(state)
         sys.exit(0)
 
-    send_telegram(
+    send_telegram_raw(
         f"Started Binance Paper Scanner (BO-1H-TRAIL2.8R + V3-4H | MAX_SLOTS={MAX_SLOTS} | "
         f"Active: {len(state.get('active', {}))})"
     )
@@ -448,4 +468,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-                
+    
