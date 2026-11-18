@@ -96,7 +96,8 @@
     "XAUUSDT_SHORT_1794967200000",
     "XAGUSDT_SHORT_1794967200000",
     "XAGUSDT_SHORT_1794970800000",
-    "XAGUSDT_SHORT_1794974400000"
+    "XAGUSDT_SHORT_1794974400000",
+    "CLUSDT_SHORT_1794988800000"
   ],
   "trades": [
     {
@@ -1549,7 +1550,7 @@
       "tp2": 1679.5059600000004,
       "be": 1794.1846800000003,
       "status": "ACTIVE",
-      "last_chk": 1794988500000,
+      "last_chk": 1794988800000,
       "exp_ms": 1794942000000,
       "fill_ms": 1794939900000,
       "hit_tp1": false,
@@ -1725,9 +1726,25 @@
       "tp2": 43.39728,
       "be": 46.19061,
       "status": "ACTIVE",
-      "last_chk": 1794988500000,
+      "last_chk": 1794988800000,
       "exp_ms": 1794981600000,
       "fill_ms": 1794979200000,
+      "hit_tp1": false,
+      "locked_pct": 0.0
+    },
+    {
+      "symbol": "CLUSDT",
+      "side": "SHORT",
+      "entry": 83.23,
+      "confirm": 83.271615,
+      "stop": 84.21809999999999,
+      "tp1": 81.74785000000003,
+      "tp2": 80.26570000000004,
+      "be": 83.10515500000001,
+      "status": "PENDING",
+      "last_chk": 1794988800000,
+      "exp_ms": 1794996000000,
+      "fill_ms": 0,
       "hit_tp1": false,
       "locked_pct": 0.0
     }
