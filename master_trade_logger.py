@@ -1,147 +1,190 @@
-import os, glob, json, csv
+#!/usr/bin/env python3
+"""
+Master Trade Logger for Paper-Trading Scanners (NO LIVE ORDERS)
+- Safely reads active_trades_*.json, closed_trades_*.csv, and existing master_trade_log.json
+- Skips non-dict entries and string keys/items so AttributeError ('str' has no attribute 'get') never occurs
+- Writes normalized summary rows to master_trade_log.csv and master_trade_log.json
+"""
+import csv
+import glob
+import json
+import os
 from datetime import datetime, timezone
-
-CSV_FILE = "master_trade_log.csv"
-JSON_FILE = "master_trade_log.json"
-
-CORE_4 = {
-    "active_trades_calm_res.json": "CALM-RES 1D (CORE)",
-    "active_trades_tsmom.json": "TSMOM 1D UPG (CORE)",
-    "active_trades_4h_res_414.json": "4H-RES-414 SNIPER (CORE)",
-    "active_trades_hybrid_609.json": "HYBRID-609 1H (CORE)",
-}
-
-BASE_KEYS = {
-    "inst", "sym", "side", "entry_date", "entry_ts", "exit_date", "exit_ts",
-    "last_checked_ts", "last_ts", "alt_entry", "entry", "exit_price", "sl",
-    "risk", "best", "b_entry", "btc_entry", "net_r", "cum_pnl", "days",
-    "bars", "hours", "stop_pct", "stop_dist",
-}
+from typing import Any, Dict, List, Tuple
 
 
-def fmt_side(s):
-    if s in (1, "1", "LONG", "long"):
-        return "LONG"
-    if s in (-1, "-1", "SHORT", "short"):
-        return "SHORT"
-    return str(s)
+MASTER_CSV = "master_trade_log.csv"
+MASTER_JSON = "master_trade_log.json"
 
 
-def fmt_ts(val, intraday=False):
-    if not val:
-        return ""
-    if isinstance(val, (int, float)) and val > 1e11:
-        fmt = "%Y-%m-%d %H:%M" if intraday else "%Y-%m-%d"
-        return datetime.fromtimestamp(val / 1000.0, tz=timezone.utc).strftime(fmt)
-    return str(val)
+def _extract_dict_records(obj: Any) -> List[Dict[str, Any]]:
+    records: List[Dict[str, Any]] = []
+    if isinstance(obj, list):
+        for item in obj:
+            if isinstance(item, dict):
+                records.append(item)
+    elif isinstance(obj, dict):
+        # Handle nested state dicts such as {"last_processed_1h": "...", "active": {"BO1H:DOTUSDT": {...}}}
+        for key in ("active", "open_positions", "positions", "trades", "signals", "records", "data"):
+            sub = obj.get(key)
+            if isinstance(sub, dict):
+                for sub_key, val in sub.items():
+                    if isinstance(val, dict):
+                        row = dict(val)
+                        if "key" not in row and isinstance(sub_key, str):
+                            row["slot_key"] = sub_key
+                        records.append(row)
+            elif isinstance(sub, list):
+                for item in sub:
+                    if isinstance(item, dict):
+                        records.append(item)
+    return records
 
 
-def fmt_duration(t):
-    if "days" in t and t["days"] != "":
-        return f"{t['days']}d"
-    if "bars" in t and t["bars"] != "":
-        return f"{t['bars'] * 4}h"
-    if "hours" in t and t["hours"] != "":
-        return f"{t['hours']}h"
-    return ""
-
-
-def extract_traits(t):
-    parts = []
-    for k, v in sorted(t.items()):
-        if k not in BASE_KEYS and v is not None:
-            parts.append(f"{k}={round(v, 3) if isinstance(v, float) else v}")
-    return "; ".join(parts)
-
-
-def main():
-    now_utc = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    rows, summary = [], {}
-
-    for path in sorted(glob.glob("active_trades*.json")):
-        fname = os.path.basename(path)
+def load_active_states() -> List[Dict[str, Any]]:
+    rows: List[Dict[str, Any]] = []
+    for path in sorted(glob.glob("active_trades_*.json")):
         try:
-            with open(path, "r", encoding="utf-8") as fp:
-                data = json.load(fp)
-        except Exception:
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            for item in _extract_dict_records(data):
+                item["_source_file"] = path
+                item["_status"] = item.get("_status") or "OPEN"
+                rows.append(item)
+        except Exception as exc:
+            print(f"[WARN] Could not parse {path}: {exc}")
+    return rows
+
+
+def load_closed_csvs() -> List[Dict[str, Any]]:
+    rows: List[Dict[str, Any]] = []
+    for path in sorted(glob.glob("closed_trades_*.csv")):
+        try:
+            with open(path, "r", encoding="utf-8", newline="") as f:
+                reader = csv.DictReader(f)
+                for r in reader:
+                    if isinstance(r, dict):
+                        item = dict(r)
+                        item["_source_file"] = path
+                        item["_status"] = item.get("_status") or "CLOSED"
+                        rows.append(item)
+        except Exception as exc:
+            print(f"[WARN] Could not parse {path}: {exc}")
+    return rows
+
+
+def load_existing_master_json() -> List[Dict[str, Any]]:
+    if not os.path.exists(MASTER_JSON):
+        return []
+    try:
+        with open(MASTER_JSON, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return _extract_dict_records(data)
+    except Exception:
+        return []
+
+
+def _safe_float(val: Any, default: float = 0.0) -> float:
+    if val is None or isinstance(val, bool):
+        return default
+    try:
+        f = float(val)
+        return f if f == f and abs(f) != float("inf") else default
+    except Exception:
+        return default
+
+
+def normalize_row(t: Dict[str, Any]) -> Dict[str, Any]:
+    model = str(t.get("model") or t.get("sleeve") or t.get("strategy") or t.get("_source_file") or "UNKNOWN")
+    symbol = str(t.get("symbol") or t.get("sym") or "").upper()
+    side_raw = t.get("side")
+    if not side_raw and "dir" in t:
+        d = _safe_float(t.get("dir"), 0.0)
+        side_raw = "LONG" if d > 0 else ("SHORT" if d < 0 else "")
+    side = str(side_raw or "").upper()
+
+    stop_dist = _safe_float(
+        t.get("stop_dist") if t.get("stop_dist") is not None else t.get("stop_pct"),
+        0.0,
+    )
+    entry_px = _safe_float(t.get("entry") if t.get("entry") is not None else t.get("ref_entry_price"), 0.0)
+    sl_px = _safe_float(t.get("sl") if t.get("sl") is not None else t.get("stop_loss_price"), 0.0)
+    tp_px = _safe_float(t.get("tp") if t.get("tp") is not None else t.get("tp2_target_price"), 0.0)
+    net_r = _safe_float(t.get("net_r"), 0.0)
+    status = str(t.get("_status") or t.get("status") or "OPEN")
+    ts = str(
+        t.get("exit_time")
+        or t.get("opened_at")
+        or t.get("closed_4h_bar_utc")
+        or t.get("timestamp_scan_utc")
+        or datetime.now(timezone.utc).isoformat()
+    )
+
+    return {
+        "timestamp_utc": ts,
+        "model": model,
+        "symbol": symbol,
+        "side": side,
+        "status": status,
+        "entry": round(entry_px, 6),
+        "sl": round(sl_px, 6),
+        "tp": round(tp_px, 6),
+        "stop_dist": round(stop_dist, 4),
+        "net_r": round(net_r, 4),
+        "source_file": str(t.get("_source_file") or ""),
+    }
+
+
+def dedupe_key(row: Dict[str, Any]) -> Tuple[str, str, str, str, str]:
+    return (
+        row["model"],
+        row["symbol"],
+        row["side"],
+        row["status"],
+        row["timestamp_utc"],
+    )
+
+
+def main() -> None:
+    combined_raw: List[Dict[str, Any]] = []
+    combined_raw.extend(load_existing_master_json())
+    combined_raw.extend(load_active_states())
+    combined_raw.extend(load_closed_csvs())
+
+    deduped: Dict[Tuple[str, str, str, str, str], Dict[str, Any]] = {}
+    for raw_item in combined_raw:
+        if not isinstance(raw_item, dict):
             continue
+        norm = normalize_row(raw_item)
+        if not norm["symbol"] and norm["model"] == "UNKNOWN":
+            continue
+        deduped[dedupe_key(norm)] = norm
 
-        default_name = fname.replace("active_trades_", "").replace("active_trades", "LEGACY").replace(".json", "").upper() + " (AUTO)"
-        model = CORE_4.get(fname, default_name)
-        is_intraday = any(tag in fname for tag in ("4h", "1h", "609"))
+    final_rows = list(deduped.values())
 
-        act_list = data.get("active", data if isinstance(data, list) else [])
-        cls_list = data.get("closed", []) if isinstance(data, dict) else []
+    with open(MASTER_JSON, "w", encoding="utf-8") as f:
+        json.dump(final_rows, f, indent=2)
 
-        realized_r, unrealized_r = 0.0, 0.0
-
-        for t in cls_list:
-            nr = float(t.get("net_r", 0.0))
-            realized_r += nr
-            rows.append({
-                "Updated_UTC": now_utc,
-                "Model": model,
-                "Status": "CLOSED",
-                "Symbol": t.get("inst") or t.get("sym", ""),
-                "Side": fmt_side(t.get("side", "")),
-                "Entry_Date": fmt_ts(t.get("entry_date") or t.get("entry_ts"), intraday=is_intraday),
-                "Exit_Date": fmt_ts(t.get("exit_date") or t.get("exit_ts"), intraday=is_intraday),
-                "Entry_Price": t.get("alt_entry") or t.get("entry", ""),
-                "Exit_Or_SL": t.get("exit_price") or t.get("sl", ""),
-                "Net_Or_Open_R": round(nr, 3),
-                "Days_Held": fmt_duration(t),
-                "Traits": extract_traits(t),
-            })
-
-        for t in act_list:
-            sd = float(t.get("stop_dist") or t.get("stop_pct") or 0.0)
-            cpnl = float(t.get("cum_pnl", 0.0))
-            open_r = round(cpnl / sd, 3) if sd > 0 else 0.0
-            unrealized_r += open_r
-            rows.append({
-                "Updated_UTC": now_utc,
-                "Model": model,
-                "Status": "ACTIVE",
-                "Symbol": t.get("inst") or t.get("sym", ""),
-                "Side": fmt_side(t.get("side", "")),
-                "Entry_Date": fmt_ts(t.get("entry_date") or t.get("entry_ts"), intraday=is_intraday),
-                "Exit_Date": "",
-                "Entry_Price": t.get("alt_entry") or t.get("entry", ""),
-                "Exit_Or_SL": t.get("sl") or f"StopDist:{round(sd * 100, 2)}%",
-                "Net_Or_Open_R": open_r,
-                "Days_Held": fmt_duration(t),
-                "Traits": extract_traits(t),
-            })
-
-        wins = sum(1 for x in cls_list if float(x.get("net_r", 0.0)) > 0)
-        summary[model] = {
-            "active_count": len(act_list),
-            "closed_count": len(cls_list),
-            "win_rate_pct": round(100.0 * wins / len(cls_list), 1) if cls_list else 0.0,
-            "realized_r": round(realized_r, 2),
-            "unrealized_r": round(unrealized_r, 2),
-        }
-
-    cols = [
-        "Updated_UTC", "Model", "Status", "Symbol", "Side",
-        "Entry_Date", "Exit_Date", "Entry_Price", "Exit_Or_SL",
-        "Net_Or_Open_R", "Days_Held", "Traits",
+    fieldnames = [
+        "timestamp_utc",
+        "model",
+        "symbol",
+        "side",
+        "status",
+        "entry",
+        "sl",
+        "tp",
+        "stop_dist",
+        "net_r",
+        "source_file",
     ]
-    with open(CSV_FILE, "w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=cols)
-        w.writeheader()
-        w.writerows(rows)
+    with open(MASTER_CSV, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(final_rows)
 
-    with open(JSON_FILE, "w", encoding="utf-8") as f:
-        json.dump({
-            "updated_utc": now_utc,
-            "total_active": sum(v["active_count"] for v in summary.values()),
-            "total_closed": sum(v["closed_count"] for v in summary.values()),
-            "models": summary,
-            "trades": rows,
-        }, f, indent=2)
-
-    print(f"Master log updated: {len(rows)} rows across {len(summary)} models.")
+    unique_models = len({r["model"] for r in final_rows if r["model"]})
+    print(f"Master log updated: {len(final_rows)} rows across {unique_models} models.")
 
 
 if __name__ == "__main__":
