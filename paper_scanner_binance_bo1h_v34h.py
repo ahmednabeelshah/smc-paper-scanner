@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Binance USD-M Futures Paper-Trading Scanner (NO LIVE ORDERS)
+Binance Paper-Trading Scanner (NO LIVE ORDERS)
 Combined Portfolio: HIGH-R-BO 1H TRAIL-2.8R + SWEEP-ABSORB V3 4H (MAX_SLOTS = 4)
-- Supports single-pass execution (--once) for GitHub Actions / cron YAML workflows
-- Supports continuous polling loop when run locally without --once
-- Reads TG_BOT_TOKEN and TG_CHAT_ID directly from environment variables / secrets
+- Fetches 1H klines concurrently via ThreadPoolExecutor (8 workers)
+- Tries data-api.binance.vision first, falling back to fapi.binance.com
+- Supports single-pass execution (--once) for GitHub Actions / cron workflows
 - Evaluates strictly closed bars (t-1) and enters at current bar Open (t)
 - Persists active state in active_trades_bo1h_v34h.json & history in closed_trades_bo1h_v34h.csv
 """
@@ -14,6 +14,7 @@ import json
 import os
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -28,7 +29,11 @@ UNIVERSE = [
     "OPUSDT", "SUIUSDT", "INJUSDT", "TIAUSDT", "FILUSDT", "ETCUSDT",
 ]
 
-BINANCE_FAPI_BASE = "https://fapi.binance.com"
+KLINE_ENDPOINTS = [
+    "https://data-api.binance.vision/api/v3/klines",
+    "https://fapi.binance.com/fapi/v1/klines",
+]
+
 STATE_FILE = Path("active_trades_bo1h_v34h.json")
 HISTORY_FILE = Path("closed_trades_bo1h_v34h.csv")
 
@@ -36,9 +41,19 @@ MAX_SLOTS = 4
 MIN_STOP_PCT = 0.015
 BASE_FRICTION = 0.0015
 POLL_INTERVAL_SEC = 30
+MAX_WORKERS = 8
 
-TG_BOT_TOKEN = os.getenv("TG_BOT_TOKEN", "").strip()
-TG_CHAT_ID = os.getenv("TG_CHAT_ID", "").strip()
+TG_BOT_TOKEN = (
+    os.getenv("TG_BOT_TOKEN")
+    or os.getenv("TG_TOKEN")
+    or os.getenv("TELEGRAM_BOT_TOKEN")
+    or ""
+).strip()
+TG_CHAT_ID = (
+    os.getenv("TG_CHAT_ID")
+    or os.getenv("TELEGRAM_CHAT_ID")
+    or ""
+).strip()
 
 KLINE_COLS = [
     "open_time", "open", "high", "low", "close", "volume",
@@ -46,44 +61,67 @@ KLINE_COLS = [
     "taker_buy_quote_volume", "ignore",
 ]
 
+HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; Bo1hV34hScanner/1.1)"}
+
 
 def send_telegram(msg: str) -> None:
     print(f"[{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}] {msg}")
     if not TG_BOT_TOKEN or not TG_CHAT_ID:
         return
     url = f"https://api.telegram.org/bot{TG_BOT_TOKEN}/sendMessage"
-    for attempt in range(3):
+    for attempt in range(2):
         try:
-            r = requests.post(url, json={"chat_id": TG_CHAT_ID, "text": msg}, timeout=10)
+            r = requests.post(url, json={"chat_id": TG_CHAT_ID, "text": msg}, timeout=8)
             if r.status_code == 200:
                 return
         except Exception:
             pass
-        time.sleep(1.5 * (attempt + 1))
+        time.sleep(1.0 * (attempt + 1))
 
 
 def fetch_klines_1h(symbol: str, limit: int = 260) -> Optional[pd.DataFrame]:
-    url = f"{BINANCE_FAPI_BASE}/fapi/v1/klines"
     params = {"symbol": symbol, "interval": "1h", "limit": limit}
-    for attempt in range(4):
-        try:
-            resp = requests.get(url, params=params, timeout=12)
-            if resp.status_code == 200:
-                raw = resp.json()
-                if not raw or len(raw) < 120:
-                    return None
-                df = pd.DataFrame(raw, columns=KLINE_COLS)
-                for col in ["open", "high", "low", "close", "volume", "taker_buy_volume"]:
-                    df[col] = pd.to_numeric(df[col], errors="coerce")
-                df["dt"] = pd.to_datetime(df["open_time"].astype("int64"), unit="ms", utc=True)
-                df["close_dt"] = pd.to_datetime(df["close_time"].astype("int64"), unit="ms", utc=True)
-                return df.drop_duplicates("dt").sort_values("dt").set_index("dt")[
-                    ["open", "high", "low", "close", "volume", "taker_buy_volume", "close_dt"]
-                ]
-        except Exception:
-            pass
-        time.sleep(1.2 * (2 ** attempt))
+    with requests.Session() as session:
+        for base_url in KLINE_ENDPOINTS:
+            for attempt in range(2):
+                try:
+                    resp = session.get(base_url, params=params, headers=HEADERS, timeout=6)
+                    if resp.status_code != 200:
+                        continue
+                    raw = resp.json()
+                    if not isinstance(raw, list) or len(raw) < 120:
+                        continue
+                    df = pd.DataFrame(raw, columns=KLINE_COLS[: len(raw[0])])
+                    for col in ["open", "high", "low", "close", "volume", "taker_buy_volume"]:
+                        df[col] = pd.to_numeric(df[col], errors="coerce")
+                    df["open_time"] = pd.to_numeric(df["open_time"], errors="coerce").astype("int64")
+                    df.loc[df["open_time"] > 10**14, "open_time"] //= 1000
+                    df["close_time"] = pd.to_numeric(df["close_time"], errors="coerce").astype("int64")
+                    df.loc[df["close_time"] > 10**14, "close_time"] //= 1000
+                    df["dt"] = pd.to_datetime(df["open_time"], unit="ms", utc=True)
+                    df["close_dt"] = pd.to_datetime(df["close_time"], unit="ms", utc=True)
+                    return df.drop_duplicates("dt").sort_values("dt").set_index("dt")[
+                        ["open", "high", "low", "close", "volume", "taker_buy_volume", "close_dt"]
+                    ]
+                except Exception:
+                    pass
+                time.sleep(0.5 * (attempt + 1))
     return None
+
+
+def fetch_all_klines_1h(symbols: List[str], limit: int = 260) -> Dict[str, pd.DataFrame]:
+    fetched: Dict[str, pd.DataFrame] = {}
+    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+        futures = {executor.submit(fetch_klines_1h, sym, limit): sym for sym in symbols}
+        for fut in as_completed(futures):
+            sym = futures[fut]
+            try:
+                df = fut.result()
+                if df is not None and len(df) >= 120:
+                    fetched[sym] = df
+            except Exception:
+                continue
+    return fetched
 
 
 def calc_atr(df: pd.DataFrame, period: int = 14) -> pd.Series:
@@ -113,7 +151,13 @@ def resample_4h_closed(df_1h_closed: pd.DataFrame) -> pd.DataFrame:
 def load_state() -> dict:
     if STATE_FILE.exists():
         try:
-            return json.loads(STATE_FILE.read_text(encoding="utf-8"))
+            data = json.loads(STATE_FILE.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                active = data.get("active")
+                return {
+                    "last_processed_1h": data.get("last_processed_1h"),
+                    "active": active if isinstance(active, dict) else {},
+                }
         except Exception:
             pass
     return {"last_processed_1h": None, "active": {}}
@@ -241,11 +285,7 @@ def evaluate_signals(
 
 
 def process_bar_cycle(state: dict) -> bool:
-    raw = {}
-    for sym in UNIVERSE:
-        df = fetch_klines_1h(sym, limit=260)
-        if df is not None and len(df) >= 120:
-            raw[sym] = df
+    raw = fetch_all_klines_1h(UNIVERSE, limit=260)
     if "BTCUSDT" not in raw:
         print("[WARN] Failed to fetch BTCUSDT klines.")
         return False
@@ -323,7 +363,6 @@ def process_bar_cycle(state: dict) -> bool:
             )
             continue
 
-        # Update trailing / breakeven stop on closed bar
         close_r = (p["dir"] * ((cl / p["entry"]) - 1.0)) / p["stop_pct"]
         if not p["trail_step"]:
             if p["stage"] == 0 and close_r >= 1.0:
@@ -340,41 +379,41 @@ def process_bar_cycle(state: dict) -> bool:
     # 2. Generate new signals on closed bar (eval_ts) and enter at current open bar (t Open)
     signals = evaluate_signals(closed_1h, eval_ts)
     if signals and len(active) < MAX_SLOTS:
-        signals.sort(key=lambda s: s.score, reverse=True)
+        signals.sort(key=lambda s: s["score"], reverse=True)
         active_syms = {p["sym"] for p in active.values()}
         for sig in signals:
-            if len(active) >= MAX_SLOTS or sig.symbol in active_syms:
+            if len(active) >= MAX_SLOTS or sig["symbol"] in active_syms:
                 continue
-            next_bars = raw[sig.symbol][raw[sig.symbol].index > eval_ts]
+            next_bars = raw[sig["symbol"]][raw[sig["symbol"]].index > eval_ts]
             if next_bars.empty:
                 continue
             opx = float(next_bars.iloc[0]["open"])
             if not np.isfinite(opx) or opx <= 0:
                 continue
-            spct = max(MIN_STOP_PCT, sig.stop_pct)
-            sl_px = opx * (1.0 - sig.direction * spct)
-            tp_px = opx * (1.0 + sig.direction * spct * sig.tp_r)
-            key = f"{sig.sleeve}:{sig.symbol}"
+            spct = max(MIN_STOP_PCT, sig["stop_pct"])
+            sl_px = opx * (1.0 - sig["direction"] * spct)
+            tp_px = opx * (1.0 + sig["direction"] * spct * sig["tp_r"])
+            key = f"{sig['sleeve']}:{sig['symbol']}"
             active[key] = {
-                "sleeve": sig.sleeve,
-                "sym": sig.symbol,
-                "dir": sig.direction,
+                "sleeve": sig["sleeve"],
+                "sym": sig["symbol"],
+                "dir": sig["direction"],
                 "entry": opx,
                 "stop_pct": spct,
                 "sl": sl_px,
                 "tp": tp_px,
-                "tp_r": sig.tp_r,
+                "tp_r": sig["tp_r"],
                 "stage": 0,
                 "hours": 0,
-                "max_hours": sig.max_hours,
-                "trail_step": sig.trail_step,
+                "max_hours": sig["max_hours"],
+                "trail_step": sig["trail_step"],
                 "opened_at": next_bars.index[0].isoformat(),
             }
-            active_syms.add(sig.symbol)
-            side = "LONG" if sig.direction == 1 else "SHORT"
+            active_syms.add(sig["symbol"])
+            side = "LONG" if sig["direction"] == 1 else "SHORT"
             send_telegram(
-                f"PAPER ENTRY [{sig.sleeve}] {sig.symbol} {side} @ {opx:.4f} | "
-                f"SL: {sl_px:.4f} ({spct*100:.2f}%) | TP: {tp_px:.4f} ({sig.tp_r}R) | "
+                f"PAPER ENTRY [{sig['sleeve']}] {sig['symbol']} {side} @ {opx:.4f} | "
+                f"SL: {sl_px:.4f} ({spct*100:.2f}%) | TP: {tp_px:.4f} ({sig['tp_r']}R) | "
                 f"Slots: {len(active)}/{MAX_SLOTS}"
             )
 
@@ -409,3 +448,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+                
