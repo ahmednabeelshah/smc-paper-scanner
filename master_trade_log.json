@@ -1,226 +1,327 @@
-{
-  "updated_utc": "2026-11-18 17:01 UTC",
-  "total_active": 4,
-  "total_closed": 2,
-  "models": {
-    "LEGACY (AUTO)": {
-      "active_count": 0,
-      "closed_count": 0,
-      "win_rate_pct": 0.0,
-      "realized_r": 0.0,
-      "unrealized_r": 0.0
-    },
-    "12H_RES_433 (AUTO)": {
-      "active_count": 0,
-      "closed_count": 0,
-      "win_rate_pct": 0.0,
-      "realized_r": 0.0,
-      "unrealized_r": 0.0
-    },
-    "4H_BEAR_424 (AUTO)": {
-      "active_count": 0,
-      "closed_count": 0,
-      "win_rate_pct": 0.0,
-      "realized_r": 0.0,
-      "unrealized_r": 0.0
-    },
-    "4H-RES-414 SNIPER (CORE)": {
-      "active_count": 0,
-      "closed_count": 0,
-      "win_rate_pct": 0.0,
-      "realized_r": 0.0,
-      "unrealized_r": 0.0
-    },
-    "ATR_CLV (AUTO)": {
-      "active_count": 0,
-      "closed_count": 0,
-      "win_rate_pct": 0.0,
-      "realized_r": 0.0,
-      "unrealized_r": 0.0
-    },
-    "CALM-RES 1D (CORE)": {
-      "active_count": 1,
-      "closed_count": 0,
-      "win_rate_pct": 0.0,
-      "realized_r": 0.0,
-      "unrealized_r": 0.0
-    },
-    "CALM_STREAK4 (AUTO)": {
-      "active_count": 0,
-      "closed_count": 0,
-      "win_rate_pct": 0.0,
-      "realized_r": 0.0,
-      "unrealized_r": 0.0
-    },
-    "CSMOM (AUTO)": {
-      "active_count": 0,
-      "closed_count": 0,
-      "win_rate_pct": 0.0,
-      "realized_r": 0.0,
-      "unrealized_r": 0.0
-    },
-    "HEXA_V5 (AUTO)": {
-      "active_count": 1,
-      "closed_count": 0,
-      "win_rate_pct": 0.0,
-      "realized_r": 0.0,
-      "unrealized_r": -0.07
-    },
-    "HVOL_RES (AUTO)": {
-      "active_count": 0,
-      "closed_count": 0,
-      "win_rate_pct": 0.0,
-      "realized_r": 0.0,
-      "unrealized_r": 0.0
-    },
-    "HYBRID-609 1H (CORE)": {
-      "active_count": 1,
-      "closed_count": 0,
-      "win_rate_pct": 0.0,
-      "realized_r": 0.0,
-      "unrealized_r": 0.0
-    },
-    "MACD (AUTO)": {
-      "active_count": 0,
-      "closed_count": 0,
-      "win_rate_pct": 0.0,
-      "realized_r": 0.0,
-      "unrealized_r": 0.0
-    },
-    "RES_CH30 (AUTO)": {
-      "active_count": 0,
-      "closed_count": 0,
-      "win_rate_pct": 0.0,
-      "realized_r": 0.0,
-      "unrealized_r": 0.0
-    },
-    "RESIDUAL (AUTO)": {
-      "active_count": 1,
-      "closed_count": 2,
-      "win_rate_pct": 100.0,
-      "realized_r": 0.3,
-      "unrealized_r": -0.43
-    },
-    "RESIDUAL_28 (AUTO)": {
-      "active_count": 0,
-      "closed_count": 0,
-      "win_rate_pct": 0.0,
-      "realized_r": 0.0,
-      "unrealized_r": 0.0
-    },
-    "STREAK4 (AUTO)": {
-      "active_count": 0,
-      "closed_count": 0,
-      "win_rate_pct": 0.0,
-      "realized_r": 0.0,
-      "unrealized_r": 0.0
-    },
-    "TSMOM 1D UPG (CORE)": {
-      "active_count": 0,
-      "closed_count": 0,
-      "win_rate_pct": 0.0,
-      "realized_r": 0.0,
-      "unrealized_r": 0.0
-    },
-    "V54 (AUTO)": {
-      "active_count": 0,
-      "closed_count": 0,
-      "win_rate_pct": 0.0,
-      "realized_r": 0.0,
-      "unrealized_r": 0.0
-    },
-    "VOL_MACD (AUTO)": {
-      "active_count": 0,
-      "closed_count": 0,
-      "win_rate_pct": 0.0,
-      "realized_r": 0.0,
-      "unrealized_r": 0.0
-    }
+[
+  {
+    "timestamp_utc": "2026-11-18T17:00:00+00:00",
+    "model": "BO1H",
+    "symbol": "DOTUSDT",
+    "side": "SHORT",
+    "status": "OPEN",
+    "entry": 0.712,
+    "sl": 0.726031,
+    "tp": 0.672714,
+    "stop_dist": 0.0197,
+    "net_r": 0.0,
+    "source_file": "active_trades_bo1h_v34h.json"
   },
-  "trades": [
-    {
-      "Updated_UTC": "2026-11-18 17:01 UTC",
-      "Model": "CALM-RES 1D (CORE)",
-      "Status": "ACTIVE",
-      "Symbol": "SOLUSDT",
-      "Side": "SHORT",
-      "Entry_Date": "2026-11-17",
-      "Exit_Date": "",
-      "Entry_Price": 75.19,
-      "Exit_Or_SL": "StopDist:1.85%",
-      "Net_Or_Open_R": 0.0,
-      "Days_Held": "0d",
-      "Traits": "beta=1.277"
-    },
-    {
-      "Updated_UTC": "2026-11-18 17:01 UTC",
-      "Model": "HEXA_V5 (AUTO)",
-      "Status": "ACTIVE",
-      "Symbol": "INJ-USDT-SWAP",
-      "Side": "SHORT",
-      "Entry_Date": "2026-11-14",
-      "Exit_Date": "",
-      "Entry_Price": 6.808,
-      "Exit_Or_SL": 7.797906,
-      "Net_Or_Open_R": -0.07,
-      "Days_Held": "2d",
-      "Traits": "mode=TREND; mult=1.0; votes=1"
-    },
-    {
-      "Updated_UTC": "2026-11-18 17:01 UTC",
-      "Model": "HYBRID-609 1H (CORE)",
-      "Status": "ACTIVE",
-      "Symbol": "XRPUSDT",
-      "Side": "SHORT",
-      "Entry_Date": "2026-11-18 08:00",
-      "Exit_Date": "",
-      "Entry_Price": 0.9996,
-      "Exit_Or_SL": 0.9996,
-      "Net_Or_Open_R": 0.0,
-      "Days_Held": "1h",
-      "Traits": "be=True; tp=0.964"
-    },
-    {
-      "Updated_UTC": "2026-11-18 17:01 UTC",
-      "Model": "RESIDUAL (AUTO)",
-      "Status": "CLOSED",
-      "Symbol": "DOGE-USDT-SWAP",
-      "Side": "SHORT",
-      "Entry_Date": "2026-11-13",
-      "Exit_Date": "2026-11-16",
-      "Entry_Price": 0.06449,
-      "Exit_Or_SL": "",
-      "Net_Or_Open_R": 0.162,
-      "Days_Held": "3d",
-      "Traits": "beta=1.451; entry_z=2.82; exit_reason=MEAN REVERT (Z->0)"
-    },
-    {
-      "Updated_UTC": "2026-11-18 17:01 UTC",
-      "Model": "RESIDUAL (AUTO)",
-      "Status": "CLOSED",
-      "Symbol": "ADA-USDT-SWAP",
-      "Side": "SHORT",
-      "Entry_Date": "2026-11-13",
-      "Exit_Date": "2026-11-16",
-      "Entry_Price": 0.1684,
-      "Exit_Or_SL": "",
-      "Net_Or_Open_R": 0.137,
-      "Days_Held": "3d",
-      "Traits": "beta=1.503; entry_z=2.52; exit_reason=MEAN REVERT (Z->0)"
-    },
-    {
-      "Updated_UTC": "2026-11-18 17:01 UTC",
-      "Model": "RESIDUAL (AUTO)",
-      "Status": "ACTIVE",
-      "Symbol": "XRP-USDT-SWAP",
-      "Side": "SHORT",
-      "Entry_Date": "2026-11-13",
-      "Exit_Date": "",
-      "Entry_Price": 1.0105,
-      "Exit_Or_SL": "StopDist:4.12%",
-      "Net_Or_Open_R": -0.428,
-      "Days_Held": "3d",
-      "Traits": "beta=1.358; entry_z=3.02"
-    }
-  ]
-}
+  {
+    "timestamp_utc": "2026-11-18T17:00:00+00:00",
+    "model": "BO1H",
+    "symbol": "LTCUSDT",
+    "side": "SHORT",
+    "status": "OPEN",
+    "entry": 43.42,
+    "sl": 44.223972,
+    "tp": 41.168878,
+    "stop_dist": 0.0185,
+    "net_r": 0.0,
+    "source_file": "active_trades_bo1h_v34h.json"
+  },
+  {
+    "timestamp_utc": "2026-11-18T17:00:00+00:00",
+    "model": "BO1H",
+    "symbol": "ARBUSDT",
+    "side": "SHORT",
+    "status": "OPEN",
+    "entry": 0.1265,
+    "sl": 0.12932,
+    "tp": 0.118603,
+    "stop_dist": 0.0223,
+    "net_r": 0.0,
+    "source_file": "active_trades_bo1h_v34h.json"
+  },
+  {
+    "timestamp_utc": "2026-11-18T17:11:45.365273+00:00",
+    "model": "active_trades_calm_res.json",
+    "symbol": "SOLUSDT",
+    "side": "SHORT",
+    "status": "OPEN",
+    "entry": 75.19,
+    "sl": 0.0,
+    "tp": 0.0,
+    "stop_dist": 0.0185,
+    "net_r": 0.0,
+    "source_file": "active_trades_calm_res.json"
+  },
+  {
+    "timestamp_utc": "2026-11-18T17:11:45.365279+00:00",
+    "model": "active_trades_csmom.json",
+    "symbol": "XRPUSDT",
+    "side": "SHORT",
+    "status": "OPEN",
+    "entry": 1.0105,
+    "sl": 0.0,
+    "tp": 0.0,
+    "stop_dist": 0.0,
+    "net_r": 0.0,
+    "source_file": "active_trades_csmom.json"
+  },
+  {
+    "timestamp_utc": "2026-11-18T17:11:45.365283+00:00",
+    "model": "active_trades_csmom.json",
+    "symbol": "BNBUSDT",
+    "side": "SHORT",
+    "status": "OPEN",
+    "entry": 629.88,
+    "sl": 0.0,
+    "tp": 0.0,
+    "stop_dist": 0.0,
+    "net_r": 0.0,
+    "source_file": "active_trades_csmom.json"
+  },
+  {
+    "timestamp_utc": "2026-11-18T17:11:45.365287+00:00",
+    "model": "active_trades_csmom.json",
+    "symbol": "ETHUSDT",
+    "side": "SHORT",
+    "status": "OPEN",
+    "entry": 1929.09,
+    "sl": 0.0,
+    "tp": 0.0,
+    "stop_dist": 0.0,
+    "net_r": 0.0,
+    "source_file": "active_trades_csmom.json"
+  },
+  {
+    "timestamp_utc": "2026-11-18T17:11:45.365296+00:00",
+    "model": "active_trades_hexa_v5.json",
+    "symbol": "INJ",
+    "side": "SHORT",
+    "status": "OPEN",
+    "entry": 6.808,
+    "sl": 7.797906,
+    "tp": 0.0,
+    "stop_dist": 0.1902,
+    "net_r": 0.0,
+    "source_file": "active_trades_hexa_v5.json"
+  },
+  {
+    "timestamp_utc": "2026-11-18T17:11:45.365302+00:00",
+    "model": "active_trades_macd.json",
+    "symbol": "AVAXUSDT",
+    "side": "SHORT",
+    "status": "OPEN",
+    "entry": 8.23,
+    "sl": 0.0,
+    "tp": 0.0,
+    "stop_dist": 0.0,
+    "net_r": 0.0,
+    "source_file": "active_trades_macd.json"
+  },
+  {
+    "timestamp_utc": "2026-11-18T17:11:45.365306+00:00",
+    "model": "active_trades_macd.json",
+    "symbol": "ATOMUSDT",
+    "side": "SHORT",
+    "status": "OPEN",
+    "entry": 1.259,
+    "sl": 0.0,
+    "tp": 0.0,
+    "stop_dist": 0.0,
+    "net_r": 0.0,
+    "source_file": "active_trades_macd.json"
+  },
+  {
+    "timestamp_utc": "2026-11-18T17:11:45.365311+00:00",
+    "model": "active_trades_residual.json",
+    "symbol": "XRPUSDT",
+    "side": "-1",
+    "status": "OPEN",
+    "entry": 0.0,
+    "sl": 0.0,
+    "tp": 0.0,
+    "stop_dist": 0.0412,
+    "net_r": 0.0,
+    "source_file": "active_trades_residual.json"
+  },
+  {
+    "timestamp_utc": "2026-11-18T17:11:45.365315+00:00",
+    "model": "active_trades_residual_28.json",
+    "symbol": "INJUSDT",
+    "side": "SHORT",
+    "status": "OPEN",
+    "entry": 8.071,
+    "sl": 0.0,
+    "tp": 0.0,
+    "stop_dist": 0.1212,
+    "net_r": 0.0,
+    "source_file": "active_trades_residual_28.json"
+  },
+  {
+    "timestamp_utc": "2026-11-18T17:11:45.365319+00:00",
+    "model": "active_trades_residual_28.json",
+    "symbol": "BNBUSDT",
+    "side": "LONG",
+    "status": "OPEN",
+    "entry": 581.56,
+    "sl": 0.0,
+    "tp": 0.0,
+    "stop_dist": 0.0295,
+    "net_r": 0.0,
+    "source_file": "active_trades_residual_28.json"
+  },
+  {
+    "timestamp_utc": "2026-11-18T17:11:45.365323+00:00",
+    "model": "active_trades_residual_28.json",
+    "symbol": "XRPUSDT",
+    "side": "SHORT",
+    "status": "OPEN",
+    "entry": 0.9735,
+    "sl": 0.0,
+    "tp": 0.0,
+    "stop_dist": 0.0356,
+    "net_r": 0.0,
+    "source_file": "active_trades_residual_28.json"
+  },
+  {
+    "timestamp_utc": "2026-11-18T17:11:45.365327+00:00",
+    "model": "active_trades_v54.json",
+    "symbol": "UNIUSDT",
+    "side": "SHORT",
+    "status": "OPEN",
+    "entry": 5.426,
+    "sl": 0.0,
+    "tp": 0.0,
+    "stop_dist": 0.0,
+    "net_r": 0.0,
+    "source_file": "active_trades_v54.json"
+  },
+  {
+    "timestamp_utc": "2026-11-18T17:11:45.365330+00:00",
+    "model": "active_trades_v54.json",
+    "symbol": "BNBUSDT",
+    "side": "SHORT",
+    "status": "OPEN",
+    "entry": 607.48,
+    "sl": 0.0,
+    "tp": 0.0,
+    "stop_dist": 0.0,
+    "net_r": 0.0,
+    "source_file": "active_trades_v54.json"
+  },
+  {
+    "timestamp_utc": "2026-11-18T17:11:45.365334+00:00",
+    "model": "active_trades_v54.json",
+    "symbol": "ETHUSDT",
+    "side": "SHORT",
+    "status": "OPEN",
+    "entry": 1857.93,
+    "sl": 0.0,
+    "tp": 0.0,
+    "stop_dist": 0.0,
+    "net_r": 0.0,
+    "source_file": "active_trades_v54.json"
+  },
+  {
+    "timestamp_utc": "2026-11-18T17:11:45.365338+00:00",
+    "model": "active_trades_v54.json",
+    "symbol": "PEPEUSDT",
+    "side": "SHORT",
+    "status": "OPEN",
+    "entry": 4e-06,
+    "sl": 0.0,
+    "tp": 0.0,
+    "stop_dist": 0.0,
+    "net_r": 0.0,
+    "source_file": "active_trades_v54.json"
+  },
+  {
+    "timestamp_utc": "2026-11-18T17:11:45.365342+00:00",
+    "model": "active_trades_v54.json",
+    "symbol": "XRPUSDT",
+    "side": "SHORT",
+    "status": "OPEN",
+    "entry": 0.9727,
+    "sl": 0.0,
+    "tp": 0.0,
+    "stop_dist": 0.0,
+    "net_r": 0.0,
+    "source_file": "active_trades_v54.json"
+  },
+  {
+    "timestamp_utc": "2026-11-18T17:11:45.365345+00:00",
+    "model": "active_trades_v54.json",
+    "symbol": "HYPEUSDT",
+    "side": "SHORT",
+    "status": "OPEN",
+    "entry": 66.238,
+    "sl": 0.0,
+    "tp": 0.0,
+    "stop_dist": 0.0,
+    "net_r": 0.0,
+    "source_file": "active_trades_v54.json"
+  },
+  {
+    "timestamp_utc": "2026-11-18T17:11:45.365348+00:00",
+    "model": "active_trades_v54.json",
+    "symbol": "ETHUSDT",
+    "side": "SHORT",
+    "status": "OPEN",
+    "entry": 1811.19,
+    "sl": 0.0,
+    "tp": 0.0,
+    "stop_dist": 0.0,
+    "net_r": 0.0,
+    "source_file": "active_trades_v54.json"
+  },
+  {
+    "timestamp_utc": "2026-11-18T17:11:45.365352+00:00",
+    "model": "active_trades_v54.json",
+    "symbol": "MUUSDT",
+    "side": "SHORT",
+    "status": "OPEN",
+    "entry": 718.02,
+    "sl": 0.0,
+    "tp": 0.0,
+    "stop_dist": 0.0,
+    "net_r": 0.0,
+    "source_file": "active_trades_v54.json"
+  },
+  {
+    "timestamp_utc": "2026-11-18T17:11:45.365355+00:00",
+    "model": "active_trades_v54.json",
+    "symbol": "NVDAUSDT",
+    "side": "SHORT",
+    "status": "OPEN",
+    "entry": 156.33,
+    "sl": 0.0,
+    "tp": 0.0,
+    "stop_dist": 0.0,
+    "net_r": 0.0,
+    "source_file": "active_trades_v54.json"
+  },
+  {
+    "timestamp_utc": "2026-11-18T17:11:45.365361+00:00",
+    "model": "active_trades_v54.json",
+    "symbol": "KORUUSDT",
+    "side": "SHORT",
+    "status": "OPEN",
+    "entry": 6.557,
+    "sl": 0.0,
+    "tp": 0.0,
+    "stop_dist": 0.0,
+    "net_r": 0.0,
+    "source_file": "active_trades_v54.json"
+  },
+  {
+    "timestamp_utc": "2026-11-18T17:11:45.365365+00:00",
+    "model": "active_trades_vol_macd.json",
+    "symbol": "INJUSDT",
+    "side": "SHORT",
+    "status": "OPEN",
+    "entry": 6.808,
+    "sl": 0.0,
+    "tp": 0.0,
+    "stop_dist": 0.0,
+    "net_r": 0.0,
+    "source_file": "active_trades_vol_macd.json"
+  }
+]

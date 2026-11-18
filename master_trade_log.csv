@@ -1,7 +1,26 @@
-Updated_UTC,Model,Status,Symbol,Side,Entry_Date,Exit_Date,Entry_Price,Exit_Or_SL,Net_Or_Open_R,Days_Held,Traits
-2026-11-18 17:01 UTC,CALM-RES 1D (CORE),ACTIVE,SOLUSDT,SHORT,2026-11-17,,75.19,StopDist:1.85%,0.0,0d,beta=1.277
-2026-11-18 17:01 UTC,HEXA_V5 (AUTO),ACTIVE,INJ-USDT-SWAP,SHORT,2026-11-14,,6.808,7.797906,-0.07,2d,mode=TREND; mult=1.0; votes=1
-2026-11-18 17:01 UTC,HYBRID-609 1H (CORE),ACTIVE,XRPUSDT,SHORT,2026-11-18 08:00,,0.9996,0.9996,0.0,1h,be=True; tp=0.964
-2026-11-18 17:01 UTC,RESIDUAL (AUTO),CLOSED,DOGE-USDT-SWAP,SHORT,2026-11-13,2026-11-16,0.06449,,0.162,3d,beta=1.451; entry_z=2.82; exit_reason=MEAN REVERT (Z->0)
-2026-11-18 17:01 UTC,RESIDUAL (AUTO),CLOSED,ADA-USDT-SWAP,SHORT,2026-11-13,2026-11-16,0.1684,,0.137,3d,beta=1.503; entry_z=2.52; exit_reason=MEAN REVERT (Z->0)
-2026-11-18 17:01 UTC,RESIDUAL (AUTO),ACTIVE,XRP-USDT-SWAP,SHORT,2026-11-13,,1.0105,StopDist:4.12%,-0.428,3d,beta=1.358; entry_z=3.02
+timestamp_utc,model,symbol,side,status,entry,sl,tp,stop_dist,net_r,source_file
+2026-11-18T17:00:00+00:00,BO1H,DOTUSDT,SHORT,OPEN,0.712,0.726031,0.672714,0.0197,0.0,active_trades_bo1h_v34h.json
+2026-11-18T17:00:00+00:00,BO1H,LTCUSDT,SHORT,OPEN,43.42,44.223972,41.168878,0.0185,0.0,active_trades_bo1h_v34h.json
+2026-11-18T17:00:00+00:00,BO1H,ARBUSDT,SHORT,OPEN,0.1265,0.12932,0.118603,0.0223,0.0,active_trades_bo1h_v34h.json
+2026-11-18T17:11:45.365273+00:00,active_trades_calm_res.json,SOLUSDT,SHORT,OPEN,75.19,0.0,0.0,0.0185,0.0,active_trades_calm_res.json
+2026-11-18T17:11:45.365279+00:00,active_trades_csmom.json,XRPUSDT,SHORT,OPEN,1.0105,0.0,0.0,0.0,0.0,active_trades_csmom.json
+2026-11-18T17:11:45.365283+00:00,active_trades_csmom.json,BNBUSDT,SHORT,OPEN,629.88,0.0,0.0,0.0,0.0,active_trades_csmom.json
+2026-11-18T17:11:45.365287+00:00,active_trades_csmom.json,ETHUSDT,SHORT,OPEN,1929.09,0.0,0.0,0.0,0.0,active_trades_csmom.json
+2026-11-18T17:11:45.365296+00:00,active_trades_hexa_v5.json,INJ,SHORT,OPEN,6.808,7.797906,0.0,0.1902,0.0,active_trades_hexa_v5.json
+2026-11-18T17:11:45.365302+00:00,active_trades_macd.json,AVAXUSDT,SHORT,OPEN,8.23,0.0,0.0,0.0,0.0,active_trades_macd.json
+2026-11-18T17:11:45.365306+00:00,active_trades_macd.json,ATOMUSDT,SHORT,OPEN,1.259,0.0,0.0,0.0,0.0,active_trades_macd.json
+2026-11-18T17:11:45.365311+00:00,active_trades_residual.json,XRPUSDT,-1,OPEN,0.0,0.0,0.0,0.0412,0.0,active_trades_residual.json
+2026-11-18T17:11:45.365315+00:00,active_trades_residual_28.json,INJUSDT,SHORT,OPEN,8.071,0.0,0.0,0.1212,0.0,active_trades_residual_28.json
+2026-11-18T17:11:45.365319+00:00,active_trades_residual_28.json,BNBUSDT,LONG,OPEN,581.56,0.0,0.0,0.0295,0.0,active_trades_residual_28.json
+2026-11-18T17:11:45.365323+00:00,active_trades_residual_28.json,XRPUSDT,SHORT,OPEN,0.9735,0.0,0.0,0.0356,0.0,active_trades_residual_28.json
+2026-11-18T17:11:45.365327+00:00,active_trades_v54.json,UNIUSDT,SHORT,OPEN,5.426,0.0,0.0,0.0,0.0,active_trades_v54.json
+2026-11-18T17:11:45.365330+00:00,active_trades_v54.json,BNBUSDT,SHORT,OPEN,607.48,0.0,0.0,0.0,0.0,active_trades_v54.json
+2026-11-18T17:11:45.365334+00:00,active_trades_v54.json,ETHUSDT,SHORT,OPEN,1857.93,0.0,0.0,0.0,0.0,active_trades_v54.json
+2026-11-18T17:11:45.365338+00:00,active_trades_v54.json,PEPEUSDT,SHORT,OPEN,4e-06,0.0,0.0,0.0,0.0,active_trades_v54.json
+2026-11-18T17:11:45.365342+00:00,active_trades_v54.json,XRPUSDT,SHORT,OPEN,0.9727,0.0,0.0,0.0,0.0,active_trades_v54.json
+2026-11-18T17:11:45.365345+00:00,active_trades_v54.json,HYPEUSDT,SHORT,OPEN,66.238,0.0,0.0,0.0,0.0,active_trades_v54.json
+2026-11-18T17:11:45.365348+00:00,active_trades_v54.json,ETHUSDT,SHORT,OPEN,1811.19,0.0,0.0,0.0,0.0,active_trades_v54.json
+2026-11-18T17:11:45.365352+00:00,active_trades_v54.json,MUUSDT,SHORT,OPEN,718.02,0.0,0.0,0.0,0.0,active_trades_v54.json
+2026-11-18T17:11:45.365355+00:00,active_trades_v54.json,NVDAUSDT,SHORT,OPEN,156.33,0.0,0.0,0.0,0.0,active_trades_v54.json
+2026-11-18T17:11:45.365361+00:00,active_trades_v54.json,KORUUSDT,SHORT,OPEN,6.557,0.0,0.0,0.0,0.0,active_trades_v54.json
+2026-11-18T17:11:45.365365+00:00,active_trades_vol_macd.json,INJUSDT,SHORT,OPEN,6.808,0.0,0.0,0.0,0.0,active_trades_vol_macd.json

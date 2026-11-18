@@ -1,5 +1,6 @@
 {
-  "active": [
+  "active": [],
+  "closed": [
     {
       "sym": "XRPUSDT",
       "inst": "XRPUSDT",
@@ -8,12 +9,15 @@
       "sl": 0.9996,
       "tp": 0.963574,
       "stop_pct": 0.02002,
-      "hours": 1,
+      "hours": 2,
       "be": true,
       "entry_ts": 1794988800000,
-      "last_ts": 1795014000000
+      "last_ts": 1795017600000,
+      "exit_ts": 1795017600000,
+      "exit_price": 0.963574,
+      "net_r": 1.725,
+      "exit_reason": "TAKE_PROFIT_1.8R"
     }
   ],
-  "closed": [],
-  "last_ts": 1795014000000
+  "last_ts": 1795017600000
 }

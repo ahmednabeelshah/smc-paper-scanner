@@ -1,0 +1,50 @@
+{
+  "last_processed_1h": "2026-11-18T16:00:00+00:00",
+  "active": {
+    "BO1H:DOTUSDT": {
+      "sleeve": "BO1H",
+      "sym": "DOTUSDT",
+      "dir": -1,
+      "entry": 0.712,
+      "stop_pct": 0.019706153033632504,
+      "sl": 0.7260307809599462,
+      "tp": 0.6727138133121503,
+      "tp_r": 2.8,
+      "stage": 0,
+      "hours": 0,
+      "max_hours": 16,
+      "trail_step": true,
+      "opened_at": "2026-11-18T17:00:00+00:00"
+    },
+    "BO1H:LTCUSDT": {
+      "sleeve": "BO1H",
+      "sym": "LTCUSDT",
+      "dir": -1,
+      "entry": 43.42,
+      "stop_pct": 0.01851616982762378,
+      "sl": 44.22397209391542,
+      "tp": 41.16887813703681,
+      "tp_r": 2.8,
+      "stage": 0,
+      "hours": 0,
+      "max_hours": 16,
+      "trail_step": true,
+      "opened_at": "2026-11-18T17:00:00+00:00"
+    },
+    "BO1H:ARBUSDT": {
+      "sleeve": "BO1H",
+      "sym": "ARBUSDT",
+      "dir": -1,
+      "entry": 0.1265,
+      "stop_pct": 0.0222962480603729,
+      "sl": 0.12932047537963717,
+      "tp": 0.11860266893701592,
+      "tp_r": 2.8,
+      "stage": 0,
+      "hours": 0,
+      "max_hours": 16,
+      "trail_step": true,
+      "opened_at": "2026-11-18T17:00:00+00:00"
+    }
+  }
+}
