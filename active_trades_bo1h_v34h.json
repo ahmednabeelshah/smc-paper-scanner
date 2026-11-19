@@ -1,9 +1,26 @@
 {
-  "last_processed_1h": "2026-11-19T10:00:00+00:00",
-  "active": {},
+  "last_processed_1h": "2026-11-19T11:00:00+00:00",
+  "active": {
+    "V3_4H:ETCUSDT": {
+      "sleeve": "V3_4H",
+      "sym": "ETCUSDT",
+      "dir": -1,
+      "entry": 5.95,
+      "stop_pct": 0.04376227762946811,
+      "sl": 6.210385551895336,
+      "tp": 5.377151785830263,
+      "tp_r": 2.2,
+      "stage": 0,
+      "hours": 0,
+      "max_hours": 36,
+      "trail_step": false,
+      "opened_at": "2026-11-19T12:00:00+00:00"
+    }
+  },
   "alerted_keys": [
     "BO1H_V34H:BO1H:LTCUSDT:SHORT:EXIT:2026-11-18T23:00:00+00:00:44.223972",
     "BO1H_V34H:BO1H:DOTUSDT:SHORT:EXIT:2026-11-19T08:00:00+00:00:0.721",
-    "BO1H_V34H:BO1H:ARBUSDT:SHORT:EXIT:2026-11-19T08:00:00+00:00:0.1274"
+    "BO1H_V34H:BO1H:ARBUSDT:SHORT:EXIT:2026-11-19T08:00:00+00:00:0.1274",
+    "BO1H_V34H:V3_4H:ETCUSDT:SHORT:ENTRY:2026-11-19T11:00:00+00:00:5.95"
   ]
 }
