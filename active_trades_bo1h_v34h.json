@@ -1,5 +1,5 @@
 {
-  "last_processed_1h": "2026-11-19T20:00:00+00:00",
+  "last_processed_1h": "2026-11-19T21:00:00+00:00",
   "active": {
     "V3_4H:ETCUSDT": {
       "sleeve": "V3_4H",
@@ -11,7 +11,7 @@
       "tp": 5.377151785830263,
       "tp_r": 2.2,
       "stage": 0,
-      "hours": 9,
+      "hours": 10,
       "max_hours": 36,
       "trail_step": false,
       "opened_at": "2026-11-19T12:00:00+00:00"
@@ -22,11 +22,11 @@
       "dir": -1,
       "entry": 43.08,
       "stop_pct": 0.01806144013943598,
-      "sl": 43.8580868412069,
+      "sl": 42.69095657939655,
       "tp": 40.90135684462067,
       "tp_r": 2.8,
-      "stage": 0,
-      "hours": 4,
+      "stage": 1,
+      "hours": 5,
       "max_hours": 16,
       "trail_step": true,
       "opened_at": "2026-11-19T17:00:00+00:00"
@@ -41,10 +41,25 @@
       "tp": 95.76152485339735,
       "tp_r": 2.8,
       "stage": 0,
-      "hours": 4,
+      "hours": 5,
       "max_hours": 16,
       "trail_step": true,
       "opened_at": "2026-11-19T17:00:00+00:00"
+    },
+    "BO1H:SUIUSDT": {
+      "sleeve": "BO1H",
+      "sym": "SUIUSDT",
+      "dir": -1,
+      "entry": 0.7002,
+      "stop_pct": 0.023091386048667523,
+      "sl": 0.716368588511277,
+      "tp": 0.6549279521684245,
+      "tp_r": 2.8,
+      "stage": 0,
+      "hours": 0,
+      "max_hours": 16,
+      "trail_step": true,
+      "opened_at": "2026-11-19T22:00:00+00:00"
     }
   },
   "alerted_keys": [
@@ -53,6 +68,7 @@
     "BO1H_V34H:BO1H:ARBUSDT:SHORT:EXIT:2026-11-19T08:00:00+00:00:0.1274",
     "BO1H_V34H:V3_4H:ETCUSDT:SHORT:ENTRY:2026-11-19T11:00:00+00:00:5.95",
     "BO1H_V34H:BO1H:LTCUSDT:SHORT:ENTRY:2026-11-19T16:00:00+00:00:43.08",
-    "BO1H_V34H:BO1H:AAVEUSDT:SHORT:ENTRY:2026-11-19T16:00:00+00:00:104.02"
+    "BO1H_V34H:BO1H:AAVEUSDT:SHORT:ENTRY:2026-11-19T16:00:00+00:00:104.02",
+    "BO1H_V34H:BO1H:SUIUSDT:SHORT:ENTRY:2026-11-19T21:00:00+00:00:0.7002"
   ]
 }
