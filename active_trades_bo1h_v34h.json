@@ -1,5 +1,5 @@
 {
-  "last_processed_1h": "2026-11-19T19:00:00+00:00",
+  "last_processed_1h": "2026-11-19T20:00:00+00:00",
   "active": {
     "V3_4H:ETCUSDT": {
       "sleeve": "V3_4H",
@@ -11,7 +11,7 @@
       "tp": 5.377151785830263,
       "tp_r": 2.2,
       "stage": 0,
-      "hours": 8,
+      "hours": 9,
       "max_hours": 36,
       "trail_step": false,
       "opened_at": "2026-11-19T12:00:00+00:00"
@@ -26,7 +26,7 @@
       "tp": 40.90135684462067,
       "tp_r": 2.8,
       "stage": 0,
-      "hours": 3,
+      "hours": 4,
       "max_hours": 16,
       "trail_step": true,
       "opened_at": "2026-11-19T17:00:00+00:00"
@@ -41,7 +41,7 @@
       "tp": 95.76152485339735,
       "tp_r": 2.8,
       "stage": 0,
-      "hours": 3,
+      "hours": 4,
       "max_hours": 16,
       "trail_step": true,
       "opened_at": "2026-11-19T17:00:00+00:00"
