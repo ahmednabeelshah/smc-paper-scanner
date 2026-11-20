@@ -26,7 +26,7 @@ jobs:
       - name: Install dependencies
         run: pip install requests pandas numpy
 
-      - name: Run 1h Scanners
+      - name: Run 1h & 4h Scanners
         env:
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
           TG_BOT_TOKEN: ${{ secrets.TG_TOKEN }}
@@ -36,14 +36,16 @@ jobs:
         run: |
           python scanner_hybrid_609.py --once
           python paper_scanner_binance_bo1h_v34h.py --once
+          python scanner_proven_core.py
+          python master_trade_logger.py
 
-      - name: Commit 1h state
+      - name: Commit scanner state
         run: |
           git config user.name "scanner-bot"
           git config user.email "scanner@noreply.local"
-          git add -f active_trades_hybrid_609.json active_trades_bo1h_v34h.json 2>/dev/null || true
+          git add -f active_trades_hybrid_609.json active_trades_bo1h_v34h.json active_trades_proven_core.json closed_trades_proven_core.csv master_trade_log.csv master_trade_log.json 2>/dev/null || true
           git diff --cached --quiet && exit 0
-          git commit -m "update 1h state"
+          git commit -m "update scanner state"
           git pull --rebase -X theirs
           git push
           
