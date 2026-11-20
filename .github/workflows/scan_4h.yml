@@ -1,13 +1,11 @@
 name: 4H Crypto Signal Scanner
 on:
-  schedule:
-    - cron: "2 0,4,8,12,16,20 * * *"
   workflow_dispatch:
     inputs:
       force_test:
         description: "Send heartbeat even if 0 signals (1 or 0)"
         required: false
-        default: "1"
+        default: "0"
 
 jobs:
   scan:
