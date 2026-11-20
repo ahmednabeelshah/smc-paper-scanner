@@ -14,39 +14,95 @@ SYMBOLS = (
     "SANDUSDT","MANAUSDT","AXSUSDT","GALAUSDT","CRVUSDT","SNXUSDT","DYDXUSDT",
     "1000FLOKIUSDT","1000BONKUSDT","ENAUSDT"
 )
-FAPI_HOSTS = ("https://fapi.binance.com", "https://fapi1.binance.com", "https://fapi2.binance.com")
-RISK_PCT = float(os.getenv("RISK_PCT", "0.035"))
-EQUITY = float(os.getenv("ACCOUNT_EQUITY", "100.0"))
-MAX_NOTIONAL_MULT, MAX_STOP_PCT, FEE, STOP_FEE = 4.0, Decimal("0.085"), 0.00045, 0.00165
-BOT_TOKEN, CHAT_ID = os.getenv("TELEGRAM_BOT_TOKEN", ""), os.getenv("TELEGRAM_CHAT_ID", "")
-FORCE_TEST = os.getenv("FORCE_TEST", "0") == "1"
+FAPI_HOSTS = (
+    "https://fapi.binance.com",
+    "https://fapi1.binance.com",
+    "https://fapi2.binance.com",
+    "https://fapi3.binance.com",
+)
+VISION_SPOT_URL = "https://data-api.binance.vision/api/v3/klines"
+
+RISK_PCT = float((os.getenv("RISK_PCT") or "0.035").strip())
+EQUITY = float((os.getenv("ACCOUNT_EQUITY") or "100.0").strip())
+BOT_TOKEN = (os.getenv("TELEGRAM_BOT_TOKEN") or "").strip()
+CHAT_ID = (os.getenv("TELEGRAM_CHAT_ID") or "").strip()
+FORCE_TEST = (os.getenv("FORCE_TEST") or "0").strip() == "1"
+
+MAX_NOTIONAL_MULT = 4.0
+MAX_STOP_PCT = Decimal("0.085")
+FEE, STOP_FEE = 0.00045, 0.00165
+GEO_BLOCKED = False
+
+def fallback_filters():
+    large = {"BNBUSDT", "LTCUSDT", "BCHUSDT", "AAVEUSDT"}
+    fine = {"DOGEUSDT", "TRXUSDT", "XLMUSDT", "HBARUSDT", "GALAUSDT", "GRTUSDT"}
+    out = {}
+    for s in SYMBOLS:
+        tick = (
+            "0.000001" if s.startswith("1000")
+            else "0.00001" if s in fine
+            else "0.01" if s in large | {"SOLUSDT"}
+            else "0.0001"
+        )
+        out[s] = (
+            Decimal(tick),
+            Decimal("0.1" if s in large else "1"),
+            Decimal(10 if s in large else 5),
+        )
+    return out
 
 def fapi_get(path, params=None):
+    global GEO_BLOCKED
+    if GEO_BLOCKED:
+        return None
     last_err = None
+    blocked_count = 0
     for host in FAPI_HOSTS:
         try:
             r = requests.get(f"{host}{path}", params=params, timeout=12)
             if r.status_code == 451:
+                blocked_count += 1
                 continue
             r.raise_for_status()
             return r.json()
         except Exception as e:
             last_err = e
+    if blocked_count == len(FAPI_HOSTS):
+        GEO_BLOCKED = True
+        return None
     raise RuntimeError(f"All Binance Futures endpoints failed for {path}: {last_err}")
 
 def get_filters_and_funding():
     info = fapi_get("/fapi/v1/exchangeInfo")
-    filters = {}
+    if info is None:
+        return fallback_filters(), {}
+    filters = fallback_filters()
     for item in info["symbols"]:
         s = item["symbol"]
-        if s in SYMBOLS and item["contractType"] == "PERPETUAL":
+        if s in filters and item["contractType"] == "PERPETUAL":
             f = {a["filterType"]: a for a in item["filters"]}
             filters[s] = tuple(map(Decimal, (
-                f["PRICE_FILTER"]["tickSize"], f["LOT_SIZE"]["stepSize"], f["MIN_NOTIONAL"]["notional"]
+                f["PRICE_FILTER"]["tickSize"],
+                f["LOT_SIZE"]["stepSize"],
+                f["MIN_NOTIONAL"]["notional"],
             )))
-    prem = fapi_get("/fapi/v1/premiumIndex")
+    prem = fapi_get("/fapi/v1/premiumIndex") or []
     funding = {x["symbol"]: float(x["lastFundingRate"]) for x in prem if x["symbol"] in filters}
     return filters, funding
+
+def fetch_klines(sym):
+    raw = fapi_get("/fapi/v1/klines", {"symbol": sym, "interval": "4h", "limit": 300})
+    if raw is not None:
+        return raw
+    spot_sym = sym[4:] if sym.startswith("1000") else sym
+    r = requests.get(VISION_SPOT_URL, params={"symbol": spot_sym, "interval": "4h", "limit": 300}, timeout=12)
+    r.raise_for_status()
+    rows = r.json()
+    if sym.startswith("1000"):
+        for row in rows:
+            for idx in (1, 2, 3, 4):
+                row[idx] = str(float(row[idx]) * 1000.0)
+    return rows
 
 def wilder(s):
     v = s.dropna()
@@ -60,7 +116,7 @@ def tick_round(val, tick, mode):
 
 def scan_symbol(args):
     sym, flt, fund, now_ms = args
-    raw = fapi_get("/fapi/v1/klines", {"symbol": sym, "interval": "4h", "limit": 300})
+    raw = fetch_klines(sym)
     df = pd.DataFrame(raw, columns=["ot","o","h","l","c","v","ct","qv","n","tb","tq","ig"])
     if int(df["ct"].iloc[-1]) > now_ms:
         df = df.iloc[:-1]
@@ -121,7 +177,10 @@ def scan_symbol(args):
         return None
     mult = Decimal("2.6" if kind == 0 else "2.5")
     tp = tick_round(entry + side * dist * mult, tick, ROUND_CEILING if side == 1 else ROUND_FLOOR)
-    raw_qty = min(RISK_PCT * EQUITY / (float(dist) + FEE * price + STOP_FEE * float(stop)), MAX_NOTIONAL_MULT * EQUITY / price)
+    raw_qty = min(
+        RISK_PCT * EQUITY / (float(dist) + FEE * price + STOP_FEE * float(stop)),
+        MAX_NOTIONAL_MULT * EQUITY / price,
+    )
     cap_qty = Decimal(str(EQUITY)) / (Decimal("0.10045") * entry)
     qty = min(Decimal(str(raw_qty)), cap_qty) // step * step
     notional = qty * entry
@@ -147,8 +206,11 @@ def send_telegram(text):
     if not BOT_TOKEN or not CHAT_ID:
         print(text)
         return
-    r = requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
-                      json={"chat_id": CHAT_ID, "text": text, "parse_mode": "HTML"}, timeout=15)
+    r = requests.post(
+        f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
+        json={"chat_id": CHAT_ID, "text": text, "parse_mode": "HTML"},
+        timeout=15,
+    )
     r.raise_for_status()
 
 def main():
@@ -162,8 +224,9 @@ def main():
         header = f"📊 <b>4H Scanner ({len(hits)} Signal{'s' if len(hits)>1 else ''})</b> — Max 3 Slots / Max 2 Same-Side\n\n"
         send_telegram(header + "\n\n".join(h[2] for h in hits[:5]))
     elif FORCE_TEST:
-        send_telegram("✅ <b>4H Scanner Heartbeat:</b> Connected to Binance Futures. 0 signals this bar.")
+        mode = "Vision Fallback" if GEO_BLOCKED else "Futures Live"
+        send_telegram(f"✅ <b>4H Scanner Heartbeat ({mode}):</b> Equity ${EQUITY:.2f} | 0 signals this bar.")
 
 if __name__ == "__main__":
     main()
-          
+    
