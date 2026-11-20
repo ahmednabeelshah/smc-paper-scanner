@@ -56,21 +56,19 @@ def fapi_get(path, params=None):
     if GEO_BLOCKED:
         return None
     last_err = None
-    blocked_count = 0
     for host in FAPI_HOSTS:
         try:
             r = requests.get(f"{host}{path}", params=params, timeout=12)
-            if r.status_code == 451:
-                blocked_count += 1
+            if r.status_code in (403, 418, 451) or not r.text.strip():
+                last_err = f"HTTP {r.status_code} (empty/blocked)"
                 continue
             r.raise_for_status()
             return r.json()
         except Exception as e:
             last_err = e
-    if blocked_count == len(FAPI_HOSTS):
-        GEO_BLOCKED = True
-        return None
-    raise RuntimeError(f"All Binance Futures endpoints failed for {path}: {last_err}")
+    print(f"INFO: Futures endpoints unavailable on runner IP ({last_err}). Switching to Vision fallback.")
+    GEO_BLOCKED = True
+    return None
 
 def get_filters_and_funding():
     info = fapi_get("/fapi/v1/exchangeInfo")
@@ -95,14 +93,20 @@ def fetch_klines(sym):
     if raw is not None:
         return raw
     spot_sym = sym[4:] if sym.startswith("1000") else sym
-    r = requests.get(VISION_SPOT_URL, params={"symbol": spot_sym, "interval": "4h", "limit": 300}, timeout=12)
-    r.raise_for_status()
-    rows = r.json()
-    if sym.startswith("1000"):
-        for row in rows:
-            for idx in (1, 2, 3, 4):
-                row[idx] = str(float(row[idx]) * 1000.0)
-    return rows
+    for attempt in range(2):
+        try:
+            r = requests.get(VISION_SPOT_URL, params={"symbol": spot_sym, "interval": "4h", "limit": 300}, timeout=12)
+            r.raise_for_status()
+            rows = r.json()
+            if sym.startswith("1000"):
+                for row in rows:
+                    for idx in (1, 2, 3, 4):
+                        row[idx] = str(float(row[idx]) * 1000.0)
+            return rows
+        except Exception:
+            if attempt == 1:
+                raise
+            time.sleep(1)
 
 def wilder(s):
     v = s.dropna()
@@ -164,13 +168,18 @@ def scan_symbol(args):
     if side == 0:
         return None
     price, a = float(c.iloc[-1]), float(atr.iloc[-1])
+    if not np.isfinite(a) or a <= 0:
+        return None
     tick, step, min_notional = flt
     entry = Decimal(str(price))
     if kind == 0:
         swing = float(l.iloc[-10:].min() if side == 1 else h.iloc[-10:].max())
         d = max(side * (price - swing), 1.5 * a) + 0.25 * a
     else:
-        d = price * abs(np.expm1(-side * 2 * float(sigd.iloc[-1])))
+        sd = float(sigd.iloc[-1])
+        if not np.isfinite(sd) or sd <= 0:
+            return None
+        d = price * abs(np.expm1(-side * 2 * sd))
     stop = tick_round(entry - side * Decimal(str(d)), tick, ROUND_FLOOR if side == 1 else ROUND_CEILING)
     dist = abs(entry - stop)
     if dist <= 0 or dist > MAX_STOP_PCT * entry:
@@ -203,8 +212,8 @@ def scan_symbol(args):
     return (kind, -(score if kind == 0 else float(rvr.iloc[-1])), msg)
 
 def send_telegram(text):
+    print(text)
     if not BOT_TOKEN or not CHAT_ID:
-        print(text)
         return
     r = requests.post(
         f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
