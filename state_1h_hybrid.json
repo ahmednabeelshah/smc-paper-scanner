@@ -1,27 +1,10 @@
 {
-  "cooldowns": {},
-  "equity": 100.4025,
-  "last_signal_bar": "2026-11-21 13:00 UTC",
-  "positions": {
-    "UNIUSDT": {
-      "bucket": 3,
-      "entry": 4.721,
-      "entry_ts": "2026-11-21T14:21:33.651791+00:00",
-      "leverage": 5,
-      "margin": 2.8852825597407588,
-      "min_cl": 4.721,
-      "min_lo": 4.47,
-      "notional": 14.426412798703794,
-      "r_dist": 0.10444999999999993,
-      "risk_pct": 0.0034999999999999996,
-      "risk_usd": 0.35,
-      "runner_on": true,
-      "side": "SHORT",
-      "sl": 4.564325,
-      "sl_pct": 0.022124549883499243,
-      "tp1": 4.480765
-    }
+  "cooldowns": {
+    "UNIUSDT": "2026-11-21T14:31:33.996913+00:00"
   },
+  "equity": 100.665,
+  "last_signal_bar": "2026-11-21 13:00 UTC",
+  "positions": {},
   "stop_timestamps": [],
   "week_eq": 100.0,
   "week_id": "2026-11-16/2026-11-22"
