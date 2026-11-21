@@ -1,6 +1,6 @@
 {
   "cooldowns": {},
-  "equity": 100.0,
+  "equity": 100.4025,
   "last_signal_bar": "2026-11-21 13:00 UTC",
   "positions": {
     "UNIUSDT": {
@@ -10,14 +10,14 @@
       "leverage": 5,
       "margin": 2.8852825597407588,
       "min_cl": 4.721,
-      "min_lo": 4.721,
+      "min_lo": 4.47,
       "notional": 14.426412798703794,
       "r_dist": 0.10444999999999993,
       "risk_pct": 0.0034999999999999996,
       "risk_usd": 0.35,
-      "runner_on": false,
+      "runner_on": true,
       "side": "SHORT",
-      "sl": 4.82545,
+      "sl": 4.564325,
       "sl_pct": 0.022124549883499243,
       "tp1": 4.480765
     }
