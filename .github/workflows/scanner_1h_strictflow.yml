@@ -1,0 +1,39 @@
+name: 1H StrictFlow Scanner
+
+on:
+  schedule:
+    # Runs at :01 UTC for 1H bars opening 13:00-19:00 UTC (19:31 to 01:31 IST)
+    - cron: "1 14,15,16,17,18,19,20 * * *"
+  workflow_dispatch:
+    inputs:
+      force_run:
+        description: "Bypass 13:00-19:00 UTC session check (1 = test now, 0 = normal)"
+        required: false
+        default: "0"
+
+jobs:
+  scan-1h-strictflow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install --quiet requests numpy pandas
+
+      - name: Run 1H StrictFlow Scanner
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          ACCOUNT_EQUITY: "100.0"
+          MARGIN_PCT: "0.08"
+          MAX_SLOTS: "4"
+          FORCE_RUN: ${{ github.event.inputs.force_run || '0' }}
+        run: python scanner_1h_strictflow.py
