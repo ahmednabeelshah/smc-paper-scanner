@@ -1,26 +1,42 @@
-name: 4H Crypto Signal Scanner
+name: 4H Clean_Top2 Futures Scanner
+
 on:
+  schedule:
+    - cron: '1 0,4,8,12,16,20 * * *'
   workflow_dispatch:
-    inputs:
-      force_test:
-        description: "Send heartbeat even if 0 signals (1 or 0)"
-        required: false
-        default: "0"
+
+permissions:
+  contents: write
 
 jobs:
   scan:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-      - run: pip install numpy pandas requests
-      - name: Run 4H Scanner
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests pandas numpy
+
+      - name: Run Clean_Top2 Scanner
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          ACCOUNT_EQUITY: ${{ secrets.ACCOUNT_EQUITY }}
-          FORCE_TEST: ${{ github.event.inputs.force_test || '0' }}
-        run: python scanner_4h_donchian_radi.py
-        
+          ACCOUNT_EQUITY: "100.0"
+          MARGIN_BASE_USD: "8.0"
+          COMPOUND: "true"
+        run: python scanner_top2_portfolio.py
+
+      - name: Save alert state
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add alert_state.json
+          git diff --staged --quiet || git commit -m "Update Clean_Top2 alert state"
+          git push
+          
