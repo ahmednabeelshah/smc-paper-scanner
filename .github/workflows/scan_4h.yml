@@ -1,4 +1,4 @@
-name: 4H Clean_Top2 Futures Scanner
+name: 4H Clean_Top2 Scanner
 
 on:
   schedule:
@@ -8,35 +8,43 @@ on:
 permissions:
   contents: write
 
-jobs:
-  scan:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+concurrency:
+  group: scanner-4h-top2-lock
+  cancel-in-progress: true
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+jobs:
+  scan_4h:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
       - name: Install dependencies
         run: pip install requests pandas numpy
 
-      - name: Run Clean_Top2 Scanner
+      - name: Run 4H Clean_Top2 Scanner
         env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TG_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
           ACCOUNT_EQUITY: "100.0"
           MARGIN_BASE_USD: "8.0"
           COMPOUND: "true"
-        run: python scanner_top2_portfolio.py
-
-      - name: Save alert state
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add alert_state.json
-          git diff --staged --quiet || git commit -m "Update Clean_Top2 alert state"
+          date -u +"%H:%M:%S UTC - Starting 4H Clean_Top2 scan..."
+          python scanner_top2_portfolio.py
+          date -u +"%H:%M:%S UTC - Finished 4H Clean_Top2 scan."
+
+      - name: Commit 4H state
+        run: |
+          git config user.name "scanner-bot"
+          git config user.email "scanner@noreply.local"
+          git add -f alert_state.json 2>/dev/null || true
+          git diff --cached --quiet && exit 0
+          git commit -m "update 4h top2 state"
+          git pull --rebase -X theirs
           git push
           
