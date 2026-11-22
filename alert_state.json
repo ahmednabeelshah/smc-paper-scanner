@@ -1,4 +1,8 @@
 {
-  "sent_keys": [],
-  "last_coin_ts": {}
+  "sent_keys": [
+    "DOTUSDT_2026-11-22 16:00:00+00:00_DS_NoBE_2.5R"
+  ],
+  "last_coin_ts": {
+    "DOTUSDT": 1795377690.335043
+  }
 }
