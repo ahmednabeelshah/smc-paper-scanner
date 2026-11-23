@@ -51,7 +51,7 @@ TG_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "").strip()
 FORCE_REPORT = os.getenv("FORCE_REPORT", "0").strip() == "1"
 
 R_BASE = 0.020                      # 2.0% base risk per trade
-TIER_MULT = {1: 1.75, 2: 1.00, 3: 0.35}  # 1=Consensus, 2=DS1_SF Only, 3=CGPT_M1 Only
+TIER_MULT = {1: 1.75, 2: 1.00, 3: 0.00}  # 1=Consensus, 2=DS1_SF Only, 3=CGPT_M1 Only
 TIER_LABEL = {
     1: "CONSENSUS (DS1_SF + CGPT_M1) [1.75x]",
     2: "DS1_StrictFlow Only [1.00x]",
@@ -511,6 +511,8 @@ def run_scanner(H1: np.ndarray | None = None, PAY: np.ndarray | None = None, GRI
                 pi = float(live_px.get(sym, sig["last_cl"][j]))
                 sr = float(sig["raw_sl"][j])
                 bkt = int(sig["bkt"][j])
+                if bkt == 3 or TIER_MULT.get(bkt, 0.0) <= 0:
+                    continue
                 if not (np.isfinite(pi) and np.isfinite(sr)) or pi <= 0:
                     continue
                 dr = (sr - pi) / pi
