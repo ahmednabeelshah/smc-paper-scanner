@@ -2,18 +2,11 @@ import json
 import math
 import os
 import time
-from datetime import datetime, timezone
+from typing import Dict, List, Optional
+
 import numpy as np
 import pandas as pd
 import requests
-
-SYMBOLS = [
-    "ETHUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT", "BNBUSDT", "ADAUSDT",
-    "AVAXUSDT", "LINKUSDT", "DOTUSDT", "TRXUSDT", "LTCUSDT", "UNIUSDT",
-    "ATOMUSDT", "NEARUSDT", "APTUSDT", "ARBUSDT", "OPUSDT", "INJUSDT",
-    "SUIUSDT", "TIAUSDT", "SEIUSDT", "RENDERUSDT", "FETUSDT", "WIFUSDT",
-]
-BTC_SYMBOL = "BTCUSDT"
 
 FAPI_BASES = [
     "https://fapi.binance.com",
@@ -23,194 +16,66 @@ FAPI_BASES = [
 ]
 VISION_BASE = "https://data-api.binance.vision"
 OKX_FUNDING_URL = "https://www.okx.com/api/v5/public/funding-rate-history"
-STATE_FILE = "alert_state.json"
 
-HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; CleanTop2Scanner/1.0)"}
+BTC_SYMBOL = "BTCUSDT"
+SYMBOLS = [
+    "ETHUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT", "BNBUSDT", "ADAUSDT",
+    "AVAXUSDT", "LINKUSDT", "DOTUSDT", "TRXUSDT", "LTCUSDT", "ATOMUSDT",
+    "NEARUSDT", "APTUSDT", "ARBUSDT", "OPUSDT", "INJUSDT", "SUIUSDT",
+    "TIAUSDT", "SEIUSDT", "RENDERUSDT", "FETUSDT", "WIFUSDT",
+]
+TOP10_MAJORS = {
+    "BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT",
+    "BNBUSDT", "ADAUSDT", "AVAXUSDT", "LINKUSDT", "DOTUSDT",
+}
+
+STATE_FILE = "alert_state.json"
+HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; PortfolioSwingScanner/2.0)"}
 
 
 def _req_json(url: str, params: dict, timeout: int = 12):
-    r = requests.get(url, params=params, headers=HEADERS, timeout=timeout)
-    if r.status_code == 200:
-        return r.json()
+    try:
+        r = requests.get(url, params=params, headers=HEADERS, timeout=timeout)
+        if r.status_code == 200:
+            return r.json()
+    except Exception:
+        pass
     return None
 
 
-def fetch_klines_raw(symbol: str, interval: str = "4h", limit: int = 120):
-    params = {"symbol": symbol, "interval": interval, "limit": limit}
-    # 1. Try Binance Futures endpoints first
+def fetch_klines_df(symbol: str, interval: str, limit: int) -> pd.DataFrame:
+    raw = None
     for base in FAPI_BASES:
-        try:
-            data = _req_json(f"{base}/fapi/v1/klines", params)
-            if isinstance(data, list) and len(data) > 0:
-                return data
-        except Exception:
-            continue
+        raw = _req_json(f"{base}/fapi/v1/klines", {"symbol": symbol, "interval": interval, "limit": limit})
+        if isinstance(raw, list) and len(raw) > 20:
+            break
+        raw = None
+    if raw is None:
+        raw = _req_json(f"{VISION_BASE}/api/v3/klines", {"symbol": symbol, "interval": interval, "limit": limit})
+    if not isinstance(raw, list) or len(raw) <= 20:
+        raise RuntimeError(f"Failed klines for {symbol} ({interval})")
 
-    # 2. Fallback to unblocked Binance Vision market-data endpoint (works on US GitHub runners)
-    try:
-        data = _req_json(f"{VISION_BASE}/api/v3/klines", params)
-        if isinstance(data, list) and len(data) > 0:
-            return data
-    except Exception:
-        pass
-
-    raise RuntimeError(f"All Binance kline endpoints failed for {symbol} ({params})")
-
-
-def fetch_funding_series(symbol: str, limit: int = 40) -> pd.Series:
-    # 1. Try Binance Futures fundingRate
-    for base in FAPI_BASES:
-        try:
-            data = _req_json(f"{base}/fapi/v1/fundingRate", {"symbol": symbol, "limit": limit})
-            if isinstance(data, list) and len(data) > 0:
-                ts = pd.to_datetime([int(x["fundingTime"]) for x in data], unit="ms", utc=True).floor("h")
-                vals = [float(x["fundingRate"]) for x in data]
-                s = pd.Series(vals, index=ts).sort_index()
-                return s[~s.index.duplicated(keep="last")]
-        except Exception:
-            continue
-
-    # 2. Fallback to unblocked OKX public perpetual funding history
-    try:
-        inst_id = symbol.replace("USDT", "-USDT-SWAP")
-        res = _req_json(OKX_FUNDING_URL, {"instId": inst_id, "limit": limit})
-        if isinstance(res, dict) and res.get("code") == "0" and res.get("data"):
-            rows = res["data"]
-            ts = pd.to_datetime([int(x["fundingTime"]) for x in rows], unit="ms", utc=True).floor("h")
-            vals = [float(x["fundingRate"]) for x in rows]
-            s = pd.Series(vals, index=ts).sort_index()
-            return s[~s.index.duplicated(keep="last")]
-    except Exception:
-        pass
-
-    return pd.Series(dtype=float)
-
-
-def get_4h_df(symbol: str, limit: int = 120) -> pd.DataFrame:
-    raw = fetch_klines_raw(symbol, interval="4h", limit=limit)
     cols = [
         "open_time", "open", "high", "low", "close", "volume",
         "close_time", "quote_vol", "trades", "taker_buy_vol", "taker_buy_quote", "ignore",
     ]
     df = pd.DataFrame(raw, columns=cols)
-    for c in ["open", "high", "low", "close", "volume", "taker_buy_vol"]:
-        df[c] = df[c].astype(float)
     df["dt"] = pd.to_datetime(df["open_time"].astype(np.int64), unit="ms", utc=True)
-
-    # Wilder ATR(14)
-    prev_c = df["close"].shift(1)
-    tr = pd.concat(
-        [df["high"] - df["low"], (df["high"] - prev_c).abs(), (df["low"] - prev_c).abs()],
-        axis=1,
-    ).max(axis=1)
-    df["atr"] = tr.ewm(alpha=1.0 / 14.0, adjust=False).mean()
+    for c in ["open", "high", "low", "close", "volume", "quote_vol", "taker_buy_vol"]:
+        df[c] = df[c].astype(float)
     df["tbr"] = np.clip(df["taker_buy_vol"] / df["volume"].replace(0.0, np.nan), 0.0, 1.0).fillna(0.5)
-    return df
+    return df[["dt", "open", "high", "low", "close", "volume", "quote_vol", "tbr"]].sort_values("dt").reset_index(drop=True)
 
 
-def compute_fractals(df: pd.DataFrame):
-    h = df["high"].to_numpy()
-    l = df["low"].to_numpy()
-    n = len(df)
-    is_sh = np.zeros(n, dtype=bool)
-    is_sl = np.zeros(n, dtype=bool)
-    conf_hi = np.full(n, np.nan)
-
-    for k in range(2, n - 2):
-        if h[k] > h[k - 1] and h[k] > h[k - 2] and h[k] > h[k + 1] and h[k] > h[k + 2]:
-            is_sh[k] = True
-            conf_hi[k + 2] = h[k]
-        if l[k] < l[k - 1] and l[k] < l[k - 2] and l[k] < l[k + 1] and l[k] < l[k + 2]:
-            is_sl[k] = True
-
-    ref_hi2 = pd.Series(conf_hi).ffill().to_numpy()
-    return is_sh, is_sl, ref_hi2
-
-
-def evaluate_symbol(symbol: str, df: pd.DataFrame, btc_close_s: float, btc_ref_hi2_s: float):
-    s = len(df) - 1
-    if s < 20:
-        return None
-
-    o = df["open"].to_numpy()
-    h = df["high"].to_numpy()
-    l = df["low"].to_numpy()
-    c = df["close"].to_numpy()
-    atr = df["atr"].to_numpy()
-    tbr = df["tbr"].to_numpy()
-
-    if not np.isfinite(atr[s]) or atr[s] <= 0:
-        return None
-
-    is_sh, is_sl, ref_hi2 = compute_fractals(df)
-
-    # --- Model 1: DS_NoBE_2.5R (Priority 0) ---
-    uwick = h[s] - max(o[s], c[s])
-    body = abs(c[s] - o[s])
-    btc_ok = (not np.isfinite(btc_ref_hi2_s)) or (btc_close_s <= btc_ref_hi2_s)
-
-    if (
-        np.isfinite(ref_hi2[s])
-        and h[s] > ref_hi2[s]
-        and c[s] < ref_hi2[s]
-        and uwick > body
-        and c[s] < o[s]
-        and tbr[s] >= 0.50
-        and btc_ok
-    ):
-        f_ser = fetch_funding_series(symbol, limit=40)
-        fund_ok = True
-        if len(f_ser) >= 4:
-            f_mapped = f_ser.reindex(df["dt"], method="ffill").ffill().fillna(0.0)
-            f_med8 = f_mapped.rolling(8, min_periods=4).median()
-            if np.isfinite(f_med8.iloc[s]):
-                fund_ok = bool(f_mapped.iloc[s] >= f_med8.iloc[s])
-
-        if fund_ok:
-            raw_sl = max(h[s], ref_hi2[s]) + 0.25 * atr[s]
-            return {
-                "symbol": symbol,
-                "model": "DS_NoBE_2.5R",
-                "priority": 0,
-                "score": float(uwick / max(body, 1e-9)),
-                "entry": float(c[s]),
-                "raw_sl": float(raw_sl),
-                "tp_r": 2.5,
-                "max_hold_h": 72,
-                "bar_time": str(df["dt"].iloc[s]),
-            }
-
-    # --- Model 2: DeepSeek_Breaker_Strict (Priority 1) ---
-    sh_i = np.flatnonzero(is_sh)
-    sl_i = np.flatnonzero(is_sl)
-    c_sh = sh_i[sh_i <= s - 4]
-    c_sl = sl_i[sl_i <= s - 4]
-    if len(c_sh) >= 1 and len(c_sl) >= 1:
-        r_h = int(c_sh[-1])
-        r_l = int(c_sl[-1])
-        if h[r_h] >= np.nanmax(h[max(0, r_h - 10) : r_h + 1]):
-            raid_bars = [k for k in range(r_h + 1, s - 1) if h[k] > h[r_h]]
-            if raid_bars:
-                rk = raid_bars[0]
-                if (
-                    c[s - 1] < l[r_l]
-                    and h[s] >= l[r_h]
-                    and c[s] < h[r_h]
-                    and (h[rk] - c[s - 1]) >= 1.5 * atr[s]
-                ):
-                    raw_sl = h[rk] + 0.25 * atr[s]
-                    return {
-                        "symbol": symbol,
-                        "model": "DeepSeek_Breaker_Strict",
-                        "priority": 1,
-                        "score": float((h[rk] - c[s - 1]) / atr[s]),
-                        "entry": float(c[s]),
-                        "raw_sl": float(raw_sl),
-                        "tp_r": 2.2,
-                        "max_hold_h": 120,
-                        "bar_time": str(df["dt"].iloc[s]),
-                    }
-
+def fetch_7d_funding(symbol: str) -> Optional[float]:
+    for base in FAPI_BASES:
+        data = _req_json(f"{base}/fapi/v1/fundingRate", {"symbol": symbol, "limit": 21})
+        if isinstance(data, list) and len(data) >= 15:
+            return float(sum(float(x["fundingRate"]) for x in data[-21:]))
+    coin = symbol.replace("USDT", "")
+    okx = _req_json(OKX_FUNDING_URL, {"instId": f"{coin}-USDT-SWAP", "limit": 21})
+    if isinstance(okx, dict) and isinstance(okx.get("data"), list) and len(okx["data"]) >= 15:
+        return float(sum(float(x["fundingRate"]) for x in okx["data"][:21]))
     return None
 
 
@@ -225,101 +90,232 @@ def load_state() -> dict:
 
 
 def save_state(state: dict):
-    state["sent_keys"] = state.get("sent_keys", [])[-300:]
+    state["sent_keys"] = list(state.get("sent_keys", []))[-600:]
     with open(STATE_FILE, "w", encoding="utf-8") as f:
         json.dump(state, f, indent=2)
 
 
-def send_telegram(text: str):
-    token = (
-        os.getenv("TELEGRAM_BOT_TOKEN")
-        or os.getenv("TG_TOKEN")
-        or os.getenv("TG_BOT_TOKEN")
-    )
-    chat_id = os.getenv("TELEGRAM_CHAT_ID") or os.getenv("TG_CHAT_ID")
-    if not token or not chat_id:
-        print("Telegram credentials not set; printing alert:\n" + text)
-        return
+def send_telegram(text: str) -> bool:
+    token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+    chat_id = (os.getenv("TELEGRAM_CHAT_ID") or os.getenv("TG_CHAT_ID") or "").strip()
+    if not token or not chat_id or os.getenv("DRY_RUN", "").lower() == "true":
+        print("\n--- TELEGRAM PREVIEW ---\n" + text + "\n------------------------")
+        return False
     url = f"https://api.telegram.org/bot{token}/sendMessage"
-    r = requests.post(
-        url,
-        json={"chat_id": chat_id, "text": text, "parse_mode": "HTML"},
-        timeout=12,
-    )
-    print(f"Telegram status: {r.status_code}")
+    r = requests.post(url, json={"chat_id": chat_id, "text": text, "parse_mode": "HTML"}, timeout=15)
+    r.raise_for_status()
+    return True
+def eval_m01_1d(sym: str, d1: pd.DataFrame, btc_1d: pd.DataFrame, is_top20: bool) -> Optional[dict]:
+    if not is_top20 or len(d1) < 110 or len(btc_1d) < 110:
+        return None
+    btc_c = float(btc_1d["close"].iloc[-1])
+    btc_ema100 = float(btc_1d["close"].ewm(span=100, adjust=False).mean().iloc[-1])
+    if not (btc_c > btc_ema100):
+        return None
+
+    tr = pd.concat([
+        d1["high"] - d1["low"],
+        (d1["high"] - d1["close"].shift(1)).abs(),
+        (d1["low"] - d1["close"].shift(1)).abs(),
+    ], axis=1).max(axis=1)
+    atr20 = float(tr.rolling(20).mean().iloc[-1])
+    ema100 = float(d1["close"].ewm(span=100, adjust=False).mean().iloc[-1])
+    hh55 = float(d1["high"].shift(1).rolling(55).max().iloc[-1])
+    c = float(d1["close"].iloc[-1])
+
+    if np.isfinite(atr20) and atr20 > 0 and c > hh55 and c > ema100:
+        sl_px = c - 2.5 * atr20
+        sl_pct = (c - sl_px) / c
+        if sl_pct > 0.01:
+            tp_px = c + 3.0 * (c - sl_px)
+            return {
+                "model": "M01_1D_Trend", "symbol": sym, "side": "LONG",
+                "entry": c, "sl_px": sl_px, "tp_px": tp_px,
+                "sl_pct": sl_pct, "tp_pct": (tp_px - c) / c,
+                "note": f"3.0R Ref | Trail 3.0x ATR20 ({3.0 * atr20:.5g})",
+                "bar_time": str(d1["dt"].iloc[-1]),
+            }
+    return None
+
+
+def eval_m04_4h(sym: str, df4: pd.DataFrame) -> Optional[dict]:
+    if sym not in TOP10_MAJORS or len(df4) < 550:
+        return None
+    d = df4.copy()
+    d["day"] = d["dt"].dt.floor("D")
+    d1 = d.groupby("day")["close"].last().to_frame("d1_c")
+    d1["d1_ema50"] = d1["d1_c"].ewm(span=50, adjust=False).mean()
+    d = d.merge(d1.shift(1), left_on="day", right_index=True, how="left")
+
+    tr = pd.concat([
+        d["high"] - d["low"],
+        (d["high"] - d["close"].shift(1)).abs(),
+        (d["low"] - d["close"].shift(1)).abs(),
+    ], axis=1).max(axis=1)
+    atr14 = float(tr.rolling(14).mean().iloc[-1])
+    bb_mid = d["close"].rolling(20).mean()
+    bb_bw = (4.0 * d["close"].rolling(20).std(ddof=0)) / bb_mid
+    bw_pct = bb_bw.rolling(540, min_periods=180).rank(pct=True)
+    sq6 = bool((bw_pct <= 0.10).rolling(6).min().iloc[-1] == 1.0)
+
+    c = float(d["close"].iloc[-1])
+    tbr = float(d["tbr"].iloc[-1])
+    d1_c = float(d["d1_c"].iloc[-1]) if pd.notna(d["d1_c"].iloc[-1]) else np.nan
+    d1_ema = float(d["d1_ema50"].iloc[-1]) if pd.notna(d["d1_ema50"].iloc[-1]) else np.nan
+    hi20 = float(d["high"].shift(1).rolling(20).max().iloc[-1])
+    lo20 = float(d["low"].shift(1).rolling(20).min().iloc[-1])
+
+    if not (sq6 and np.isfinite(atr14) and atr14 > 0 and np.isfinite(d1_ema)):
+        return None
+    s_dist = 1.5 * atr14
+    s_pct = s_dist / c
+    if s_pct <= 0.005:
+        return None
+
+    if c > hi20 and d1_c > d1_ema and tbr > 0.52:
+        return {
+            "model": "M04_4H_Squeeze", "symbol": sym, "side": "LONG",
+            "entry": c, "sl_px": c - s_dist, "tp_px": c + 2.5 * s_dist,
+            "sl_pct": s_pct, "tp_pct": 2.5 * s_pct,
+            "note": "2.5R Target | BE at +2.0R | Max Hold 48h",
+            "bar_time": str(d["dt"].iloc[-1]),
+        }
+    if c < lo20 and d1_c < d1_ema and tbr < 0.48:
+        return {
+            "model": "M04_4H_Squeeze", "symbol": sym, "side": "SHORT",
+            "entry": c, "sl_px": c + s_dist, "tp_px": c - 2.5 * s_dist,
+            "sl_pct": s_pct, "tp_pct": 2.5 * s_pct,
+            "note": "2.5R Target | BE at +2.0R | Max Hold 48h",
+            "bar_time": str(d["dt"].iloc[-1]),
+        }
+    return None
+
+
+def eval_m03_weekly(daily_map: Dict[str, pd.DataFrame], med_vols: Dict[str, float]) -> List[dict]:
+    if not daily_map:
+        return []
+    sample_dt = next(iter(daily_map.values()))["dt"].iloc[-1]
+    if os.getenv("FORCE_M03", "").lower() != "true" and (sample_dt + pd.Timedelta(days=1)).weekday() != 0:
+        return []
+
+    eligible = [s for s, df in daily_map.items() if len(df) >= 120 and s in med_vols]
+    top_syms = sorted(eligible, key=lambda s: med_vols[s], reverse=True)[:30]
+    f7_map = {}
+    for sym in top_syms:
+        f7 = fetch_7d_funding(sym)
+        if f7 is not None:
+            f7_map[sym] = f7
+        time.sleep(0.03)
+    if len(f7_map) < 10:
+        return []
+
+    ranked = sorted(f7_map.items(), key=lambda kv: kv[1])
+    lo4, hi4 = {k for k, _ in ranked[:4]}, {k for k, _ in ranked[-4:]}
+    s_cands, l_cands = [], []
+    for sym in hi4:
+        df = daily_map[sym]
+        c = float(df["close"].iloc[-1])
+        ema10 = float(df["close"].ewm(span=10, adjust=False).mean().iloc[-1])
+        if f7_map[sym] >= 0.00015 and c < ema10:
+            s_cands.append(sym)
+    for sym in lo4:
+        if sym in s_cands:
+            continue
+        df = daily_map[sym]
+        c = float(df["close"].iloc[-1])
+        ema10 = float(df["close"].ewm(span=10, adjust=False).mean().iloc[-1])
+        if f7_map[sym] <= 0.00005 and c > ema10:
+            l_cands.append(sym)
+
+    out = []
+    for side, cands, sl_m, tp_m in [("SHORT", s_cands, 1.08, 0.84), ("LONG", l_cands, 0.92, 1.16)]:
+        if len(cands) >= 3:
+            for sym in cands:
+                c = float(daily_map[sym]["close"].iloc[-1])
+                out.append({
+                    "model": "M03_Wkly_Fund", "symbol": sym, "side": side,
+                    "entry": c, "sl_px": c * sl_m, "tp_px": c * tp_m,
+                    "sl_pct": 0.08, "tp_pct": 0.16,
+                    "note": f"2.0R Bracket (8% SL / 16% TP) | 7d Fund={f7_map[sym]*100:+.3f}%",
+                    "bar_time": str(daily_map[sym]["dt"].iloc[-1]),
+                })
+    return out
 
 
 def main():
     equity = float(os.getenv("ACCOUNT_EQUITY", "100.0"))
     margin_base = float(os.getenv("MARGIN_BASE_USD", "8.0"))
     compound = os.getenv("COMPOUND", "true").lower() == "true"
-
-    btc_df = get_4h_df(BTC_SYMBOL, limit=120).iloc[:-1].reset_index(drop=True)
-    _, _, btc_ref_hi2 = compute_fractals(btc_df)
-    btc_close_s = float(btc_df["close"].iloc[-1])
-    btc_ref_hi2_s = float(btc_ref_hi2[-1])
+    dry_run = os.getenv("DRY_RUN", "").lower() == "true"
 
     state = load_state()
     sent_keys = set(state.get("sent_keys", []))
     last_coin_ts = state.get("last_coin_ts", {})
     now_ts = time.time()
 
-    signals = []
+    btc_1d = fetch_klines_df(BTC_SYMBOL, "1d", 150).iloc[:-1].reset_index(drop=True)
+    btc_4h = fetch_klines_df(BTC_SYMBOL, "4h", 600).iloc[:-1].reset_index(drop=True)
+    daily_map, h4_map, med_vols = {}, {BTC_SYMBOL: btc_4h}, {}
+
     for sym in SYMBOLS:
         try:
-            df = get_4h_df(sym, limit=120).iloc[:-1].reset_index(drop=True)
-            sig = evaluate_symbol(sym, df, btc_close_s, btc_ref_hi2_s)
-            if sig:
-                signals.append(sig)
+            d1 = fetch_klines_df(sym, "1d", 150).iloc[:-1].reset_index(drop=True)
+            daily_map[sym] = d1
+            if len(d1) >= 120:
+                med_vols[sym] = float(d1["quote_vol"].tail(30).median())
+            if sym in TOP10_MAJORS:
+                h4_map[sym] = fetch_klines_df(sym, "4h", 600).iloc[:-1].reset_index(drop=True)
         except Exception as e:
-            print(f"[{sym}] Skipped due to fetch/eval error: {e}")
-        time.sleep(0.05)
+            print(f"[{sym}] Skip fetch error: {e}")
+        time.sleep(0.04)
 
-    signals.sort(key=lambda x: (x["priority"], -x["score"], x["symbol"]))
-    print(f"Scan complete | BTC Close={btc_close_s:.2f} | Raw signals={len(signals)}")
+    top20_set = set(sorted(med_vols.keys(), key=lambda s: med_vols[s], reverse=True)[:20])
+    signals: List[dict] = []
+    for sym in [BTC_SYMBOL] + SYMBOLS:
+        if sym in h4_map:
+            s4 = eval_m04_4h(sym, h4_map[sym])
+            if s4:
+                signals.append(s4)
+        if sym != BTC_SYMBOL and sym in daily_map:
+            s1 = eval_m01_1d(sym, daily_map[sym], btc_1d, sym in top20_set)
+            if s1:
+                signals.append(s1)
+    signals.extend(eval_m03_weekly(daily_map, med_vols))
+    print(f"Scan complete | BTC 1D={btc_1d['close'].iloc[-1]:.2f} | Raw signals={len(signals)}")
 
     fired = 0
     for sig in signals:
-        sym = sig["symbol"]
-        dedup_key = f"{sym}_{sig['bar_time']}_{sig['model']}"
-        if dedup_key in sent_keys:
+        sym, model, side = sig["symbol"], sig["model"], sig["side"]
+        dedup_key, cd_key = f"{model}_{sym}_{side}_{sig['bar_time']}", f"{model}_{sym}"
+        if not dry_run and (dedup_key in sent_keys or (now_ts - float(last_coin_ts.get(cd_key, 0.0))) < 16 * 3600):
             continue
-        if (now_ts - float(last_coin_ts.get(sym, 0.0))) < 16 * 3600:
-            continue
-
-        entry = sig["entry"]
-        d_raw = (sig["raw_sl"] - entry) / entry
-        d_val = float(np.clip(d_raw, 0.015, 0.080))
-        sl_px = entry * (1.0 + d_val)
-        tp_px = entry * (1.0 - sig["tp_r"] * d_val)
-
-        lev = int(np.clip(math.floor(0.28 / d_val), 5, 10))
-        margin_usd = round(margin_base * (equity / 100.0), 2) if compound else round(margin_base, 2)
-        margin_usd = min(margin_usd, round(0.15 * equity, 2))
+        d_val = max(float(sig["sl_pct"]), 0.005)
+        lev = int(np.clip(math.floor(0.28 / d_val), 3, 10))
+        margin_usd = min(round(margin_base * (equity / 100.0), 2) if compound else round(margin_base, 2), round(0.15 * equity, 2))
         notional = round(margin_usd * lev, 2)
         if notional < 5.0:
             continue
-
+        sl_sign, tp_sign = ("-" if side == "LONG" else "+"), ("+" if side == "LONG" else "-")
         msg = (
-            f"<b>4H CLEAN_TOP2 — SHORT SIGNAL</b>\n"
-            f"<b>Coin:</b> {sym} | <b>Model:</b> {sig['model']}\n"
+            f"<b>SWING PORTFOLIO — {side} SIGNAL</b>\n"
+            f"<b>Coin:</b> {sym} | <b>Engine:</b> {model}\n"
             f"<b>Mode:</b> Isolated | <b>Leverage:</b> {lev}x | <b>Margin:</b> ${margin_usd:.2f} (Notional ${notional:.2f})\n"
-            f"<b>Entry (Ref):</b> {entry:.6g}\n"
-            f"<b>Stop-Loss:</b> {sl_px:.6g} (+{d_val*100:.2f}%)\n"
-            f"<b>Take-Profit:</b> {tp_px:.6g} (-{sig['tp_r']*d_val*100:.2f}% | {sig['tp_r']}R)\n"
-            f"<b>Max Hold:</b> {sig['max_hold_h']}h (No early BE)"
+            f"<b>Entry (Ref):</b> {sig['entry']:.6g}\n"
+            f"<b>Stop-Loss:</b> {sig['sl_px']:.6g} ({sl_sign}{sig['sl_pct']*100:.2f}%)\n"
+            f"<b>Take-Profit:</b> {sig['tp_px']:.6g} ({tp_sign}{sig['tp_pct']*100:.2f}%)\n"
+            f"<b>Rule:</b> {sig['note']}"
         )
         send_telegram(msg)
-        sent_keys.add(dedup_key)
-        last_coin_ts[sym] = now_ts
+        if not dry_run:
+            sent_keys.add(dedup_key)
+            last_coin_ts[cd_key] = now_ts
         fired += 1
 
-    state["sent_keys"] = list(sent_keys)
-    state["last_coin_ts"] = last_coin_ts
-    save_state(state)
-    print(f"Alerts sent this run: {fired}")
+    if not dry_run:
+        state["sent_keys"], state["last_coin_ts"] = list(sent_keys), last_coin_ts
+        save_state(state)
+    print(f"Alerts processed: {fired}")
 
 
 if __name__ == "__main__":
     main()
-    
