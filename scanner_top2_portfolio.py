@@ -392,6 +392,151 @@ def main():
 
 
 if __name__ == "__main__":
+    main()
+    "NEARUSDT", "side": "SHORT", "ts": 1795464660, "entry": 2.986, "sl": 3.22488, "sl0": 3.22488, "tp": 2.50824, "max_h": 168, "be_r": None, "trail": None},
+    {"model": "M03_Wkly_Fund", "symbol": "WIFUSDT", "side": "SHORT", "ts": 1795464660, "entry": 0.1206, "sl": 0.130248, "sl0": 0.130248, "tp": 0.101304, "max_h": 168, "be_r": None, "trail": None},
+    {"model": "M03_Wkly_Fund", "symbol": "RENDERUSDT", "side": "SHORT", "ts": 1795464660, "entry": 1.339, "sl": 1.44612, "sl0": 1.44612, "tp": 1.12476, "max_h": 168, "be_r": None, "trail": None},
+    {"model": "M03_Wkly_Fund", "symbol": "ARBUSDT", "side": "SHORT", "ts": 1795464660, "entry": 0.1143, "sl": 0.123444, "sl0": 0.123444, "tp": 0.096012, "max_h": 168, "be_r": None, "trail": None},
+]
+
+
+def manage_open(state: dict, now_ts: float):
+    """Paper exit tracking on closed 1h bars: SL first, then TP, then max hold; BE and trail move the stop after each bar."""
+    still = []
+    for p in state.get("open", []):
+        try:
+            hrs = int((now_ts - p["ts"]) / 3600) + 3
+            k = fetch_klines_df(p["symbol"], "1h", min(1000, max(hrs, 25))).iloc[:-1]
+            k = k[k["dt"] >= pd.to_datetime(p["ts"], unit="s", utc=True)]
+            long_ = p["side"] == "LONG"
+            e, sl, tp = p["entry"], p["sl"], p["tp"]
+            risk = abs(e - p["sl0"])
+            exit_px, why = None, None
+            for _, b in k.iterrows():
+                hit_sl = b["low"] <= sl if long_ else b["high"] >= sl
+                hit_tp = b["high"] >= tp if long_ else b["low"] <= tp
+                if hit_sl:
+                    exit_px, why = sl, "SL"
+                    break
+                if hit_tp:
+                    exit_px, why = tp, "TP"
+                    break
+                age_h = (b["dt"].timestamp() + 3600 - p["ts"]) / 3600
+                if p.get("max_h") and age_h >= p["max_h"]:
+                    exit_px, why = float(b["close"]), "TIME"
+                    break
+                fav = (b["high"] - e) if long_ else (e - b["low"])
+                if p.get("be_r") and fav >= p["be_r"] * risk:
+                    sl = max(sl, e) if long_ else min(sl, e)
+                if p.get("trail"):
+                    sl = max(sl, b["high"] - p["trail"]) if long_ else min(sl, b["low"] + p["trail"])
+            p["sl"] = sl
+            if exit_px is None:
+                still.append(p)
+                continue
+            r = ((exit_px - e) if long_ else (e - exit_px)) / risk
+            net = r - COST_RT / (risk / e)
+            send_telegram(
+                f"<b>PAPER EXIT [{p['model']}] {p['symbol']} {p['side']}</b>\n"
+                f"<b>Reason:</b> {why} | <b>Entry:</b> {e:.6g} | <b>Exit:</b> {exit_px:.6g}\n"
+                f"<b>Gross:</b> {r:+.2f}R | <b>Net:</b> {net:+.2f}R"
+            )
+            state.setdefault("closed", []).append({**p, "exit": exit_px, "why": why, "net_r": round(net, 3), "exit_ts": now_ts})
+        except Exception as ex:
+            print(f"[{p.get('symbol')}] manage error: {ex}")
+            still.append(p)
+    state["open"] = still
+
+
+def main():
+    equity = float(os.getenv("ACCOUNT_EQUITY", "100.0"))
+    margin_base = float(os.getenv("MARGIN_BASE_USD", "8.0"))
+    compound = os.getenv("COMPOUND", "true").lower() == "true"
+    dry_run = os.getenv("DRY_RUN", "").lower() == "true"
+
+    state = load_state()
+    sent_keys = set(state.get("sent_keys", []))
+    last_coin_ts = state.get("last_coin_ts", {})
+    now_ts = time.time()
+
+    if not state.get("seeded_v1"):
+        state.setdefault("open", []).extend(SEED_OPEN)
+        state["seeded_v1"] = True
+    if not dry_run:
+        manage_open(state, now_ts)
+
+    btc_1d = fetch_klines_df(BTC_SYMBOL, "1d", 150).iloc[:-1].reset_index(drop=True)
+    btc_4h = fetch_klines_df(BTC_SYMBOL, "4h", 600).iloc[:-1].reset_index(drop=True)
+    daily_map, h4_map, med_vols = {}, {BTC_SYMBOL: btc_4h}, {}
+
+    for sym in SYMBOLS:
+        try:
+            d1 = fetch_klines_df(sym, "1d", 150).iloc[:-1].reset_index(drop=True)
+            daily_map[sym] = d1
+            if len(d1) >= 120:
+                med_vols[sym] = float(d1["quote_vol"].tail(30).median())
+            if sym in TOP10_MAJORS:
+                h4_map[sym] = fetch_klines_df(sym, "4h", 600).iloc[:-1].reset_index(drop=True)
+        except Exception as e:
+            print(f"[{sym}] Skip fetch error: {e}")
+        time.sleep(0.04)
+
+    top20_set = set(sorted(med_vols.keys(), key=lambda s: med_vols[s], reverse=True)[:20])
+    signals: List[dict] = []
+    for sym in [BTC_SYMBOL] + SYMBOLS:
+        if sym in h4_map:
+            s4 = eval_m04_4h(sym, h4_map[sym])
+            if s4:
+                signals.append(s4)
+        if sym != BTC_SYMBOL and sym in daily_map:
+            s1 = eval_m01_1d(sym, daily_map[sym], btc_1d, sym in top20_set)
+            if s1:
+                signals.append(s1)
+    signals.extend(eval_m03_weekly(daily_map, med_vols))
+    print(f"Scan complete | BTC 1D={btc_1d['close'].iloc[-1]:.2f} | Raw signals={len(signals)}")
+
+    fired = 0
+    for sig in signals:
+        sym, model, side = sig["symbol"], sig["model"], sig["side"]
+        dedup_key, cd_key = f"{model}_{sym}_{side}_{sig['bar_time']}", f"{model}_{sym}"
+        if not dry_run and (dedup_key in sent_keys or (now_ts - float(last_coin_ts.get(cd_key, 0.0))) < 16 * 3600):
+            continue
+        d_val = max(float(sig["sl_pct"]), 0.005)
+        lev = int(np.clip(math.floor(0.28 / d_val), 3, 10))
+        margin_usd = min(round(margin_base * (equity / 100.0), 2) if compound else round(margin_base, 2), round(0.15 * equity, 2))
+        notional = round(margin_usd * lev, 2)
+        if notional < 5.0:
+            continue
+        sl_sign, tp_sign = ("-" if side == "LONG" else "+"), ("+" if side == "LONG" else "-")
+        msg = (
+            f"<b>SWING PORTFOLIO — {side} SIGNAL</b>\n"
+            f"<b>Coin:</b> {sym} | <b>Engine:</b> {model}\n"
+            f"<b>Mode:</b> Isolated | <b>Leverage:</b> {lev}x | <b>Margin:</b> ${margin_usd:.2f} (Notional ${notional:.2f})\n"
+            f"<b>Entry (Ref):</b> {sig['entry']:.6g}\n"
+            f"<b>Stop-Loss:</b> {sig['sl_px']:.6g} ({sl_sign}{sig['sl_pct']*100:.2f}%)\n"
+            f"<b>Take-Profit:</b> {sig['tp_px']:.6g} ({tp_sign}{sig['tp_pct']*100:.2f}%)\n"
+            f"<b>Rule:</b> {sig['note']}"
+        )
+        send_telegram(msg)
+        if not dry_run:
+            state.setdefault("open", []).append({
+                "model": model, "symbol": sym, "side": side, "ts": now_ts,
+                "entry": sig["entry"], "sl": sig["sl_px"], "sl0": sig["sl_px"], "tp": sig["tp_px"],
+                "max_h": {"M04_4H_Squeeze": 48, "M03_Wkly_Fund": 168}.get(model),
+                "be_r": 2.0 if model == "M04_4H_Squeeze" else None,
+                "trail": sig.get("trail"),
+            })
+            sent_keys.add(dedup_key)
+            last_coin_ts[cd_key] = now_ts
+        fired += 1
+
+    if not dry_run:
+        state["sent_keys"], state["last_coin_ts"] = list(sent_keys), last_coin_ts
+        save_state(state)
+    print(f"Alerts processed: {fired} | Open paper trades: {len(state.get('open', []))}")
+
+
+if __name__ == "__main__":
     main()ate.get("sent_keys", []))
     last_coin_ts = state.get("last_coin_ts", {})
     now_ts = time.time()
