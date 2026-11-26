@@ -1,11 +1,11 @@
 {
   "sent_keys": [
-    "DOTUSDT_2026-11-22 16:00:00+00:00_DS_NoBE_2.5R",
     "M03_Wkly_Fund_RENDERUSDT_SHORT_2026-11-22 00:00:00+00:00",
     "UNIUSDT_2026-11-23 04:00:00+00:00_DS_NoBE_2.5R",
+    "M03_Wkly_Fund_WIFUSDT_SHORT_2026-11-22 00:00:00+00:00",
     "M03_Wkly_Fund_ARBUSDT_SHORT_2026-11-22 00:00:00+00:00",
-    "M03_Wkly_Fund_NEARUSDT_SHORT_2026-11-22 00:00:00+00:00",
-    "M03_Wkly_Fund_WIFUSDT_SHORT_2026-11-22 00:00:00+00:00"
+    "DOTUSDT_2026-11-22 16:00:00+00:00_DS_NoBE_2.5R",
+    "M03_Wkly_Fund_NEARUSDT_SHORT_2026-11-22 00:00:00+00:00"
   ],
   "last_coin_ts": {
     "DOTUSDT": 1795377690.335043,
@@ -25,19 +25,6 @@
       "sl": 3.22488,
       "sl0": 3.22488,
       "tp": 2.50824,
-      "max_h": 168,
-      "be_r": null,
-      "trail": null
-    },
-    {
-      "model": "M03_Wkly_Fund",
-      "symbol": "WIFUSDT",
-      "side": "SHORT",
-      "ts": 1795464660,
-      "entry": 0.1206,
-      "sl": 0.130248,
-      "sl0": 0.130248,
-      "tp": 0.101304,
       "max_h": 168,
       "be_r": null,
       "trail": null
@@ -70,5 +57,23 @@
     }
   ],
   "seeded_v1": true,
-  "closed": []
+  "closed": [
+    {
+      "model": "M03_Wkly_Fund",
+      "symbol": "WIFUSDT",
+      "side": "SHORT",
+      "ts": 1795464660,
+      "entry": 0.1206,
+      "sl": 0.130248,
+      "sl0": 0.130248,
+      "tp": 0.101304,
+      "max_h": 168,
+      "be_r": null,
+      "trail": null,
+      "exit": 0.130248,
+      "why": "SL",
+      "net_r": -1.025,
+      "exit_ts": 1795665679.9183977
+    }
+  ]
 }
