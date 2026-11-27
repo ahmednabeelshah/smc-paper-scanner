@@ -5,11 +5,9 @@
     "WIFUSDT": "2026-11-26T17:31:25.242570+00:00"
   },
   "equity": 97.9758789538976,
-  "last_signal_bar": "2026-11-27 13:00 UTC",
+  "last_signal_bar": "2026-11-27 14:00 UTC",
   "positions": {},
-  "stop_timestamps": [
-    "2026-11-27T02:31:34.965010+00:00"
-  ],
+  "stop_timestamps": [],
   "week_eq": 100.665,
   "week_id": "2026-11-23/2026-11-29"
 }
